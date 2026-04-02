@@ -626,6 +626,46 @@ button:active { transform: scale(0.96); opacity: 0.8; }
 .empty-state .empty-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.6; }
 .empty-state p { font-size: 0.95rem; line-height: 1.5; font-weight: 400; }
 
+/* Timer */
+.timer-btn {
+  background: rgba(118,118,128,0.12);
+  border: none;
+  border-radius: var(--radius-xs);
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: var(--mono);
+  letter-spacing: -0.02em;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all .2s cubic-bezier(.4,0,.2,1);
+  min-width: 72px;
+  text-align: center;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.timer-btn:active { transform: scale(0.96); }
+.timer-btn.running {
+  background: var(--accent-dim);
+  color: var(--accent);
+  animation: timerPulse 1.5s ease-in-out infinite;
+}
+.timer-btn.running::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+@keyframes timerPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(48,209,88,0.2); }
+  50% { box-shadow: 0 0 0 6px rgba(48,209,88,0); }
+}
+
 /* Prev session hint */
 .prev-hint {
   font-size: 0.75rem;
@@ -1028,6 +1068,7 @@ function renderSetInputs(ex, exIdx, existingEntry, prevEntry) {
       html += `
         <input type="number" step="1" min="0" placeholder="${ps || 'Sek'}" value="${sec}" data-ex="${exIdx}" data-set="${s}" data-field="seconds">
         <span class="set-unit">Sek</span>
+        <button class="timer-btn" data-timer-ex="${exIdx}" data-timer-set="${s}">0:00</button>
       `;
     } else if (ex.type === 'skill') {
       const n = setData?.note ?? '';
@@ -1998,6 +2039,52 @@ window.addEventListener('resize', () => {
     if (state.currentTab === 'bodyweight') render();
   }, 200);
 });
+
+// ===== TIMERS =====
+const activeTimers = {}; // key: "exIdx-setIdx" → { interval, startTime }
+
+function fmtTimer(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function toggleTimer(exIdx, setIdx) {
+  const key = `${exIdx}-${setIdx}`;
+  const btn = document.querySelector(`[data-timer-ex="${exIdx}"][data-timer-set="${setIdx}"]`);
+  const input = document.querySelector(`[data-ex="${exIdx}"][data-set="${setIdx}"][data-field="seconds"]`);
+  if (!btn) return;
+
+  if (activeTimers[key]) {
+    // Stop timer
+    clearInterval(activeTimers[key].interval);
+    const elapsed = Math.round((Date.now() - activeTimers[key].startTime) / 1000);
+    if (input) input.value = elapsed;
+    btn.classList.remove('running');
+    btn.textContent = fmtTimer(elapsed);
+    delete activeTimers[key];
+  } else {
+    // Start timer
+    const startTime = Date.now();
+    activeTimers[key] = {
+      startTime,
+      interval: setInterval(() => {
+        const elapsed = Math.round((Date.now() - startTime) / 1000);
+        btn.textContent = fmtTimer(elapsed);
+      }, 250)
+    };
+    btn.classList.add('running');
+    btn.textContent = '0:00';
+  }
+}
+
+document.addEventListener('click', e => {
+  const timerBtn = e.target.closest('.timer-btn');
+  if (timerBtn) {
+    e.stopPropagation();
+    toggleTimer(timerBtn.dataset.timerEx, timerBtn.dataset.timerSet);
+  }
+}, true);
 
 // ===== SERVICE WORKER REGISTRATION =====
 if ('serviceWorker' in navigator) {
