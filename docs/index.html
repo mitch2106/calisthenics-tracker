@@ -639,7 +639,7 @@ button:active { transform: scale(0.96); opacity: 0.8; }
   color: var(--text2);
   cursor: pointer;
   transition: all .2s cubic-bezier(.4,0,.2,1);
-  min-width: 72px;
+  min-width: 96px;
   text-align: center;
   flex-shrink: 0;
   display: flex;
@@ -1019,7 +1019,7 @@ function renderTraining(el) {
           </div>
           <div class="ex-info" id="info-${i}"></div>
           <div class="swap-list" id="swap-${i}" style="display:none"></div>
-          ${isWarmup ? '<p style="color:var(--text3);font-size:0.85rem">Warm-Up — kein Tracking</p>' : renderSetInputs(ex, i, existingEntry, prevEntry)}
+          ${isWarmup ? renderWarmupTimers(ex, i) : renderSetInputs(ex, i, existingEntry, prevEntry)}
         </div>
       </div>
     `;
@@ -1034,6 +1034,17 @@ function renderTraining(el) {
   el.innerHTML = html;
 
   // Restore open states etc handled by event delegation
+}
+
+function renderWarmupTimers(ex, exIdx) {
+  let html = '<p style="color:var(--text3);font-size:0.85rem;margin-bottom:10px">Warm-Up — ' + ex.target + '</p>';
+  for (let s = 0; s < ex.sets; s++) {
+    html += `<div class="set-row">
+      <span class="set-label">S${s+1}</span>
+      <button class="timer-btn" data-timer-ex="${exIdx}" data-timer-set="${s}">0:00.00</button>
+    </div>`;
+  }
+  return html;
 }
 
 function renderSetInputs(ex, exIdx, existingEntry, prevEntry) {
@@ -1066,9 +1077,9 @@ function renderSetInputs(ex, exIdx, existingEntry, prevEntry) {
       const sec = setData?.seconds ?? '';
       const ps = prevSet ? `${prevSet.seconds}` : '';
       html += `
-        <input type="number" step="1" min="0" placeholder="${ps || 'Sek'}" value="${sec}" data-ex="${exIdx}" data-set="${s}" data-field="seconds">
+        <input type="number" step="0.01" min="0" placeholder="${ps || 'Sek'}" value="${sec}" data-ex="${exIdx}" data-set="${s}" data-field="seconds">
         <span class="set-unit">Sek</span>
-        <button class="timer-btn" data-timer-ex="${exIdx}" data-timer-set="${s}">0:00</button>
+        <button class="timer-btn" data-timer-ex="${exIdx}" data-timer-set="${s}">0:00.00</button>
       `;
     } else if (ex.type === 'skill') {
       const n = setData?.note ?? '';
@@ -2043,10 +2054,12 @@ window.addEventListener('resize', () => {
 // ===== TIMERS =====
 const activeTimers = {}; // key: "exIdx-setIdx" → { interval, startTime }
 
-function fmtTimer(sec) {
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return `${m}:${s.toString().padStart(2, '0')}`;
+function fmtTimer(ms) {
+  const totalSec = ms / 1000;
+  const m = Math.floor(totalSec / 60);
+  const s = Math.floor(totalSec % 60);
+  const cs = Math.floor((ms % 1000) / 10);
+  return `${m}:${s.toString().padStart(2, '0')}.${cs.toString().padStart(2, '0')}`;
 }
 
 function toggleTimer(exIdx, setIdx) {
@@ -2058,10 +2071,11 @@ function toggleTimer(exIdx, setIdx) {
   if (activeTimers[key]) {
     // Stop timer
     clearInterval(activeTimers[key].interval);
-    const elapsed = Math.round((Date.now() - activeTimers[key].startTime) / 1000);
-    if (input) input.value = elapsed;
+    const elapsedMs = Date.now() - activeTimers[key].startTime;
+    const elapsedSec = Math.round(elapsedMs / 10) / 100; // 2 decimal places
+    if (input) input.value = elapsedSec;
     btn.classList.remove('running');
-    btn.textContent = fmtTimer(elapsed);
+    btn.textContent = fmtTimer(elapsedMs);
     delete activeTimers[key];
   } else {
     // Start timer
@@ -2069,12 +2083,11 @@ function toggleTimer(exIdx, setIdx) {
     activeTimers[key] = {
       startTime,
       interval: setInterval(() => {
-        const elapsed = Math.round((Date.now() - startTime) / 1000);
-        btn.textContent = fmtTimer(elapsed);
-      }, 250)
+        btn.textContent = fmtTimer(Date.now() - startTime);
+      }, 30)
     };
     btn.classList.add('running');
-    btn.textContent = '0:00';
+    btn.textContent = '0:00.00';
   }
 }
 
