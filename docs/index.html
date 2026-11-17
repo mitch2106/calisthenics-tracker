@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#00d4aa">
+<meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="CaliTracker">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/svg+xml" href="icon-192.svg">
-<link rel="apple-touch-icon" href="icon-192.svg">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Calisthenics & Gym Tracker</title>
 <style>
 :root {
@@ -35,6 +35,8 @@
   --blue-dim: rgba(10,132,255,0.12);
   --purple: #bf5af2;
   --purple-dim: rgba(191,90,242,0.12);
+  --gold: #ffd60a;
+  --gold-dim: rgba(255,214,10,0.14);
   --radius: 16px;
   --radius-sm: 12px;
   --radius-xs: 8px;
@@ -201,8 +203,29 @@ button:active { transform: scale(0.96); opacity: 0.8; }
   transition: color .25s;
   min-width: 56px;
 }
-.tab-btn .tab-icon { font-size: 1.4rem; margin-bottom: 1px; }
+.tab-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  margin-bottom: 3px;
+}
 .tab-btn.active { color: var(--accent); }
+.tab-btn.active svg { stroke-width: 2.2; }
+button:focus-visible, .wd:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ico {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
 
 /* Cards */
 .card {
@@ -246,17 +269,42 @@ button:active { transform: scale(0.96); opacity: 0.8; }
 .card.open .card-chevron { transform: rotate(90deg); }
 
 /* Exercise Card */
+.ex-head { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
 .ex-name {
   font-weight: 600;
-  font-size: 0.95rem;
-  flex: 1;
-  min-width: 0;
+  font-size: 0.98rem;
   letter-spacing: -0.01em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.25;
 }
-.ex-meta { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+.ex-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.ex-ring { width: 28px; height: 28px; flex-shrink: 0; }
+.ex-ring-track { fill: none; stroke: rgba(118,118,128,0.3); stroke-width: 3; transition: fill .25s, stroke .25s; }
+.ex-ring-fill {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 14px 14px;
+  transition: stroke-dashoffset .35s cubic-bezier(.4,0,.2,1);
+}
+.ex-ring-check { fill: none; stroke: #000; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity .2s; }
+.ex-ring.untracked .ex-ring-track { stroke-dasharray: 2 4.9; }
+.card.done .ex-ring-track { fill: var(--accent); stroke: var(--accent); }
+.card.done .ex-ring-check { opacity: 1; }
+.pr-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  background: var(--gold);
+  color: #000;
+  flex-shrink: 0;
+}
+.ex-pr { display: none; }
+.card.has-pr .ex-pr { display: inline-flex; }
 .badge {
   display: inline-flex;
   align-items: center;
@@ -293,6 +341,21 @@ button:active { transform: scale(0.96); opacity: 0.8; }
   padding: 4px 0;
   border-radius: 6px;
 }
+.set-label { transition: background .2s, color .2s; }
+.set-row.done .set-label { background: var(--accent-dim); color: var(--accent); }
+.set-row.pr .set-label { background: var(--gold-dim); color: var(--gold); }
+.check-btn {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(118,118,128,0.12);
+  color: var(--text3);
+}
+.set-row.done .check-btn { background: var(--accent); color: #000; }
 .set-row input, .set-row textarea { flex: 1; }
 .set-row input[type="number"] { max-width: 100px; }
 .set-unit { font-size: 0.8rem; color: var(--text3); flex-shrink: 0; font-weight: 500; }
@@ -339,7 +402,160 @@ button:active { transform: scale(0.96); opacity: 0.8; }
   z-index: 50;
   pointer-events: none;
 }
-.save-bar button { pointer-events: all; width: 100%; max-width: 600px; }
+.save-bar button {
+  pointer-events: all;
+  width: 100%;
+  max-width: 600px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.save-count {
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: rgba(0,0,0,0.16);
+  padding: 3px 9px;
+  border-radius: 100px;
+}
+.save-track { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(0,0,0,0.16); }
+.save-fill { display: block; height: 100%; width: 0; background: rgba(0,0,0,0.55); transition: width .35s cubic-bezier(.4,0,.2,1); }
+
+/* Week strip */
+.week { margin-bottom: 18px; }
+.week-head { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
+.week-title { flex: 1; min-width: 0; font-size: 1.4rem; font-weight: 800; letter-spacing: -0.03em; }
+.week-nav {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(118,118,128,0.12);
+  color: var(--text2);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.week-nav input { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; opacity: 0; cursor: pointer; }
+.week-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.wd {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 0 7px;
+  border-radius: 14px;
+  background: rgba(118,118,128,0.1);
+}
+.wd-name { font-size: 0.68rem; font-weight: 600; color: var(--text3); }
+.wd-num { font-size: 1.05rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text); }
+.wd-dot { width: 6px; height: 6px; border-radius: 50%; }
+.wd.has .wd-dot { background: var(--accent); }
+.wd.today { box-shadow: inset 0 0 0 1.5px rgba(255,255,255,0.3); }
+.wd.sel { background: var(--text); box-shadow: none; }
+.wd.sel .wd-name { color: rgba(0,0,0,0.55); }
+.wd.sel .wd-num { color: #000; }
+.wd.sel.has .wd-dot { background: #1a8f3a; }
+.week-sum { margin-top: 10px; font-size: 0.82rem; font-weight: 500; color: var(--text2); }
+
+/* Streak */
+.streak {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px 5px 8px;
+  border-radius: 100px;
+  background: var(--warn-dim);
+  color: var(--warn);
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.streak svg { width: 16px; height: 16px; fill: currentColor; }
+
+/* Records */
+.rec-item { display: flex; align-items: baseline; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--separator); }
+.rec-item:last-child { border-bottom: none; }
+.rec-name { flex: 1; min-width: 0; font-size: 0.92rem; font-weight: 500; }
+.rec-val { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--gold); white-space: nowrap; }
+.rec-date { font-size: 0.75rem; color: var(--text3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Record sheet */
+.pr-sheet { text-align: center; }
+.pr-sheet .pr-trophy { width: 64px; height: 64px; fill: none; stroke: var(--gold); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; margin: 4px auto 10px; display: block; }
+.modal .pr-sheet h2 { margin-bottom: 4px; font-size: 1.5rem; }
+.pr-sheet .pr-sub { color: var(--text2); font-size: 0.9rem; margin-bottom: 18px; }
+.pr-list { list-style: none; text-align: left; margin-bottom: 20px; background: rgba(118,118,128,0.1); border-radius: var(--radius-sm); }
+.pr-list li { padding: 12px 14px; border-bottom: 1px solid var(--separator); display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; }
+.pr-list li:last-child { border-bottom: none; }
+.pr-name { font-weight: 600; font-size: 0.95rem; }
+.pr-val { font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; text-align: right; }
+.pr-prev { grid-column: 1 / -1; font-size: 0.78rem; color: var(--text3); }
+.confetti { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 500; pointer-events: none; }
+
+/* Fullscreen timer */
+.timer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  padding: max(18px, env(safe-area-inset-top)) 22px max(22px, env(safe-area-inset-bottom));
+  animation: fadeIn .2s ease;
+}
+.timer-top { display: flex; align-items: flex-start; gap: 12px; }
+.timer-ex { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.2; }
+.timer-set { color: var(--text2); font-size: 0.9rem; font-weight: 500; margin-top: 3px; }
+.timer-close {
+  margin-left: auto;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(118,118,128,0.2);
+  color: var(--text2);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.timer-dial { position: relative; flex: 1; min-height: 0; display: grid; place-items: center; padding: 12px 0; }
+.timer-dial svg { width: min(100%, 52dvh); max-height: 100%; aspect-ratio: 1; }
+.dial-track { fill: none; stroke: rgba(118,118,128,0.2); stroke-width: 10; }
+.dial-fill {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 10;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 140px 140px;
+  transition: stroke .3s;
+}
+.timer-overlay.lead .dial-fill { stroke: var(--text2); }
+.timer-overlay.best .dial-fill { stroke: var(--gold); }
+.timer-read { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+.timer-main { font-size: clamp(4rem, 24vw, 7.5rem); font-weight: 800; letter-spacing: -0.05em; font-variant-numeric: tabular-nums; line-height: 1; }
+.timer-cs { font-size: 1.6rem; font-weight: 600; color: var(--text3); font-variant-numeric: tabular-nums; min-height: 1.3em; }
+.timer-status { min-height: 1.5em; text-align: center; font-size: 1.05rem; font-weight: 700; color: var(--accent); }
+.timer-overlay.lead .timer-status { color: var(--text2); }
+.timer-overlay.best .timer-status { color: var(--gold); }
+.timer-facts { display: flex; justify-content: center; gap: 32px; margin: 10px 0 18px; min-height: 2.6em; }
+.timer-facts div { text-align: center; }
+.timer-facts span { display: block; font-size: 0.75rem; font-weight: 600; color: var(--text3); }
+.timer-facts b { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.timer-opts { display: flex; justify-content: center; gap: 8px; margin-bottom: 14px; }
+.timer-opt { background: rgba(118,118,128,0.18); color: var(--text2); border-radius: 100px; padding: 9px 16px; font-size: 0.85rem; }
+.timer-stop { width: 100%; min-height: 76px; border-radius: 22px; background: var(--danger); color: #fff; font-size: 1.3rem; font-weight: 800; }
+.timer-overlay.lead .timer-stop { background: rgba(118,118,128,0.24); color: var(--text); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
 
 /* History */
 .session-card {
@@ -640,31 +856,18 @@ button:active { transform: scale(0.96); opacity: 0.8; }
   cursor: pointer;
   transition: all .2s cubic-bezier(.4,0,.2,1);
   min-width: 96px;
+  min-height: 42px;
   text-align: center;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
+  font-variant-numeric: tabular-nums;
 }
 .timer-btn:active { transform: scale(0.96); }
-.timer-btn.running {
-  background: var(--accent-dim);
-  color: var(--accent);
-  animation: timerPulse 1.5s ease-in-out infinite;
-}
-.timer-btn.running::before {
-  content: '';
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent);
-  flex-shrink: 0;
-}
-@keyframes timerPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(48,209,88,0.2); }
-  50% { box-shadow: 0 0 0 6px rgba(48,209,88,0); }
-}
+.timer-btn svg { width: 12px; height: 12px; fill: currentColor; }
+.timer-btn.timed { background: var(--accent-dim); color: var(--accent); }
 
 /* Prev session hint */
 .prev-hint {
@@ -672,7 +875,7 @@ button:active { transform: scale(0.96); opacity: 0.8; }
   color: var(--text3);
   font-style: normal;
   font-weight: 500;
-  margin-top: 2px;
+  margin: -5px 0 12px 40px;
   opacity: 0.7;
 }
 
@@ -702,28 +905,29 @@ h2 {
 
 <nav id="tabs">
   <button class="tab-btn active" data-tab="training">
-    <span class="tab-icon">&#9955;</span>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg>
     Training
   </button>
   <button class="tab-btn" data-tab="history">
-    <span class="tab-icon">&#128203;</span>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
     Historie
   </button>
   <button class="tab-btn" data-tab="progress">
-    <span class="tab-icon">&#128200;</span>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17l5-5 4 3 7-8"/><path d="M15 7h5v5"/></svg>
     Fortschritt
   </button>
   <button class="tab-btn" data-tab="bodyweight">
-    <span class="tab-icon">&#9878;</span>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4.5"/><path d="M8.5 10.5a4.5 4.5 0 0 1 7 0M12 10.5l1.6-2.2"/></svg>
     Gewicht
   </button>
   <button class="tab-btn" data-tab="manage">
-    <span class="tab-icon">&#9881;</span>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h8M18 7h2M4 12h2M12 12h8M4 17h9M19 17h1"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="12" r="2.2"/><circle cx="16" cy="17" r="2.2"/></svg>
     Verwalten
   </button>
 </nav>
 
 <div id="modal-root"></div>
+<div id="timer-root"></div>
 <div id="toast" class="toast"></div>
 
 <script>
@@ -731,7 +935,11 @@ h2 {
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-const today = () => new Date().toISOString().slice(0, 10);
+const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const today = () => iso(new Date());
+const addDays = (dateStr, n) => { const d = new Date(dateStr + 'T00:00:00'); d.setDate(d.getDate() + n); return iso(d); };
+const mondayOf = dateStr => { const d = new Date(dateStr + 'T00:00:00'); return addDays(dateStr, -((d.getDay() + 6) % 7)); };
+const num = n => String(Math.round(n * 100) / 100).replace('.', ',');
 const fmtDate = d => {
   const p = d.split('-');
   return `${p[2]}.${p[1]}.${p[0]}`;
@@ -953,12 +1161,156 @@ function load() {
     save();
   }
   if (state.days.length && !state.selectedDayId) {
-    state.selectedDayId = state.days[0].id;
+    state.selectedDayId = dayForDate(state.trainingDate) || state.days[0].id;
   }
+  loadDrafts();
+}
+
+// ===== DRAFT (unsaved inputs survive tab switches and reloads) =====
+let drafts = {};
+const draftKey = () => `${state.trainingDate}|${state.selectedDayId}`;
+
+function loadDrafts() {
+  try { drafts = JSON.parse(localStorage.getItem('calitracker-draft') || '{}') || {}; } catch (e) { drafts = {}; }
+  const limit = addDays(today(), -14);
+  Object.keys(drafts).forEach(k => { if (k.split('|')[0] < limit) delete drafts[k]; });
+}
+function saveDrafts() {
+  try { localStorage.setItem('calitracker-draft', JSON.stringify(drafts)); } catch (e) {}
+}
+function draftVal(exName, s, field) {
+  return drafts[draftKey()]?.[`${exName}|${s}|${field}`];
+}
+
+// ===== SETTINGS =====
+let settings = { lead: 5, sound: true };
+try { Object.assign(settings, JSON.parse(localStorage.getItem('calitracker-settings') || '{}')); } catch (e) {}
+function saveSettings() {
+  try { localStorage.setItem('calitracker-settings', JSON.stringify(settings)); } catch (e) {}
+}
+
+// ===== DATES, STREAK =====
+const currentDay = () => state.days.find(d => d.id === state.selectedDayId);
+
+// Plan day that fits a date: the day already logged on it, else the one named after its weekday
+function dayForDate(dateStr) {
+  const logged = state.sessions.find(s => s.date === dateStr && state.days.some(d => d.id === s.dayId));
+  if (logged) return logged.dayId;
+  const wd = ['sonntag','montag','dienstag','mittwoch','donnerstag','freitag','samstag'][new Date(dateStr + 'T00:00:00').getDay()];
+  return state.days.find(d => d.name.toLowerCase().startsWith(wd))?.id || null;
+}
+
+function setTrainingDate(dateStr) {
+  if (!dateStr) return;
+  state.trainingDate = dateStr;
+  const id = dayForDate(dateStr);
+  if (id) state.selectedDayId = id;
+  render();
+}
+
+// Consecutive calendar weeks with at least one session; the running week may still be open
+function weekStreak() {
+  const weeks = new Set(state.sessions.map(s => mondayOf(s.date)));
+  let w = mondayOf(today());
+  if (!weeks.has(w)) w = addDays(w, -7);
+  let n = 0;
+  while (weeks.has(w)) { n++; w = addDays(w, -7); }
+  return n;
+}
+
+function renderHeader() {
+  const n = weekStreak();
+  $('#header-right').innerHTML = n
+    ? `<div class="streak" title="Wochen in Folge mit Training"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c.8 3.6 5.5 5.6 5.5 11a5.5 5.5 0 0 1-11 0c0-2.1 1-3.6 2.1-4.6.2 1.7 1 2.6 1.9 2.9C10.2 8.6 11 5.5 12 2.5z"/></svg>${n} ${n === 1 ? 'Woche' : 'Wochen'}</div>`
+    : '';
+}
+
+function weekHtml() {
+  const sel = state.trainingDate, td = today(), mon = mondayOf(sel);
+  const has = new Set(state.sessions.map(s => s.date));
+  let n = 0;
+  const days = ['Mo','Di','Mi','Do','Fr','Sa','So'].map((nm, i) => {
+    const d = addDays(mon, i);
+    const h = has.has(d);
+    if (h) n++;
+    return `<button class="wd${d === sel ? ' sel' : ''}${d === td ? ' today' : ''}${h ? ' has' : ''}" data-date="${d}" aria-label="${fmtDate(d)}${h ? ', trainiert' : ''}">
+      <span class="wd-name">${nm}</span><span class="wd-num">${+d.slice(8)}</span><span class="wd-dot"></span>
+    </button>`;
+  }).join('');
+  const D = new Date(sel + 'T00:00:00');
+  const title = (sel === td ? 'Heute' : D.toLocaleDateString('de-DE', { weekday: 'long' })) + ', ' + D.toLocaleDateString('de-DE', { day: 'numeric', month: 'long' });
+  const chev = dir => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="${dir < 0 ? 'M14.5 6l-6 6 6 6' : 'M9.5 6l6 6-6 6'}"/></svg>`;
+  return `
+    <div class="week">
+      <div class="week-head">
+        <div class="week-title">${title}</div>
+        <button class="week-nav" data-week-shift="-7" aria-label="Woche zurück">${chev(-1)}</button>
+        <button class="week-nav" data-week-shift="7" aria-label="Woche vor">${chev(1)}</button>
+        <label class="week-nav" aria-label="Anderes Datum wählen">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14" rx="3"/><path d="M4 10h16M8.5 3.5v3.5M15.5 3.5v3.5"/></svg>
+          <input type="date" id="train-date" value="${sel}">
+        </label>
+      </div>
+      <div class="week-days">${days}</div>
+      <div class="week-sum">${n} von ${state.days.length} Einheiten in dieser Woche</div>
+    </div>`;
+}
+
+// ===== RECORDS =====
+// A set is comparable as {a, b}: a = weight / reps / seconds, b = reps as tie-breaker for weighted
+function setValue(type, s) {
+  if (type === 'weighted') return (s.reps || 0) > 0 ? { a: s.weight || 0, b: s.reps } : null;
+  if (type === 'bodyweight') return (s.reps || 0) > 0 ? { a: s.reps, b: 0 } : null;
+  if (type === 'hold') return (s.seconds || 0) > 0 ? { a: s.seconds, b: 0 } : null;
+  return null;
+}
+const beats = (c, b) => c.a > b.a || (c.a === b.a && c.b > b.b);
+function bestOf(type, sets) {
+  let best = null;
+  (sets || []).forEach(s => { const c = setValue(type, s); if (c && (!best || beats(c, best))) best = c; });
+  return best;
+}
+function fmtBest(type, v) {
+  if (type === 'weighted') return `${num(v.a)} kg × ${v.b}`;
+  if (type === 'bodyweight') return `${v.a} Reps`;
+  return `${num(v.a)} s`;
+}
+
+// Best value of an exercise before the session that is being logged right now
+function bestBefore(name, type) {
+  let best = null;
+  state.sessions.forEach(s => {
+    if (s.date > state.trainingDate) return;
+    if (s.date === state.trainingDate && s.dayId === state.selectedDayId) return;
+    s.entries.forEach(e => {
+      if (e.name !== name || e.type !== type) return;
+      const b = bestOf(type, e.sets);
+      if (b && (!best || beats(b, best))) best = b;
+    });
+  });
+  return best;
+}
+
+// Walks all sessions in date order: which entries were records when they happened, and what stands today
+function recordHistory() {
+  const running = {};
+  const bySession = {};
+  [...state.sessions].sort((a, b) => a.date.localeCompare(b.date)).forEach(s => {
+    s.entries.forEach(e => {
+      const b = bestOf(e.type, e.sets);
+      if (!b) return;
+      const k = e.type + '|' + e.name;
+      const cur = running[k];
+      if (cur && beats(b, cur.v)) (bySession[s.id] ||= {})[e.name] = true;
+      if (!cur || beats(b, cur.v)) running[k] = { name: e.name, type: e.type, v: b, date: s.date };
+    });
+  });
+  return { bySession, records: Object.values(running) };
 }
 
 // ===== RENDER ENGINE =====
 function render() {
+  renderHeader();
   const main = $('#main');
   switch(state.currentTab) {
     case 'training': renderTraining(main); break;
@@ -974,10 +1326,10 @@ function renderTraining(el) {
   const day = state.days.find(d => d.id === state.selectedDayId);
   const prevSession = getPrevSession(state.selectedDayId, state.trainingDate);
 
+  trainBests = {};
+
   let html = `
-    <div style="margin-bottom:12px">
-      <input type="date" id="train-date" value="${state.trainingDate}" style="max-width:180px">
-    </div>
+    ${weekHtml()}
     <div class="day-selector">
       ${state.days.map(d => `
         <button class="day-btn ${d.id === state.selectedDayId ? 'active' : ''}" data-day="${d.id}">${d.name}</button>
@@ -1000,22 +1352,31 @@ function renderTraining(el) {
     const isWarmup = ex.type === 'warmup';
     const badgeClass = `badge-${ex.type}`;
     const typeLabel = {weighted:'Weighted',bodyweight:'Bodyweight',hold:'Hold',skill:'Skill',warmup:'Warm-Up'}[ex.type];
+    if (!isWarmup && ex.type !== 'skill') trainBests[i] = bestBefore(ex.name, ex.type);
 
     html += `
       <div class="card" data-ex-idx="${i}">
         <div class="card-header">
-          <span class="ex-name">${ex.name}</span>
-          <div class="ex-meta">
-            <span class="badge ${badgeClass}">${typeLabel}</span>
-            <span class="target-text">${ex.target}</span>
-            ${ex.rir ? `<span class="rir-text">RIR ${ex.rir}</span>` : ''}
+          <svg class="ex-ring${isWarmup ? ' untracked' : ''}" viewBox="0 0 28 28" aria-hidden="true">
+            <circle class="ex-ring-track" cx="14" cy="14" r="11"/>
+            ${isWarmup ? '' : `<circle class="ex-ring-fill" cx="14" cy="14" r="11" stroke-dasharray="${RING_C}" stroke-dashoffset="${RING_C}"/>
+            <path class="ex-ring-check" d="M9 14.5l3.2 3.2L19 11"/>`}
+          </svg>
+          <div class="ex-head">
+            <span class="ex-name">${ex.name}</span>
+            <div class="ex-meta">
+              <span class="badge ${badgeClass}">${typeLabel}</span>
+              <span class="target-text">${ex.target}</span>
+              ${ex.rir ? `<span class="rir-text">RIR ${ex.rir}</span>` : ''}
+              <span class="pr-chip ex-pr">Rekord</span>
+            </div>
           </div>
           <span class="card-chevron">&#9654;</span>
         </div>
         <div class="card-body">
           <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
-            <button class="btn-icon ex-info-btn" data-name="${ex.name}" title="Info">&#8505;&#65039;</button>
-            ${!isWarmup ? `<button class="btn-ghost btn-sm ex-swap-btn" data-idx="${i}">&#8644; Tauschen</button>` : ''}
+            <button class="btn-ghost btn-sm ex-info-btn" data-name="${ex.name}">Anleitung</button>
+            ${!isWarmup ? `<button class="btn-ghost btn-sm ex-swap-btn" data-idx="${i}">Tauschen</button>` : ''}
           </div>
           <div class="ex-info" id="info-${i}"></div>
           <div class="swap-list" id="swap-${i}" style="display:none"></div>
@@ -1027,21 +1388,67 @@ function renderTraining(el) {
 
   html += `
     <div class="save-bar">
-      <button class="btn-primary" id="save-session">&#10003; Session speichern</button>
+      <button class="btn-primary" id="save-session">
+        Session speichern
+        <span class="save-count" id="save-count"></span>
+        <span class="save-track"><span class="save-fill" id="save-fill"></span></span>
+      </button>
     </div>
   `;
 
   el.innerHTML = html;
+  updateProgressUI();
+}
 
-  // Restore open states etc handled by event delegation
+const RING_C = 69.12; // circumference of the r=11 progress ring on each exercise card
+let trainBests = {};  // exercise index → best value before this session, for live record marks
+const PLAY_ICON = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1.2v9.6L10.5 6z"/></svg>';
+
+// Reads the set inputs on screen and updates rings, record marks and the save bar
+function updateProgressUI() {
+  if (state.currentTab !== 'training') return;
+  const day = currentDay();
+  if (!day) return;
+  let done = 0, total = 0;
+  $$('#main .card[data-ex-idx]').forEach(card => {
+    const i = +card.dataset.exIdx;
+    const ex = day.exercises[i];
+    if (!ex || ex.type === 'warmup') return;
+    const best = trainBests[i];
+    let exDone = 0, anyPr = false;
+    card.querySelectorAll('.set-row').forEach(row => {
+      const v = f => row.querySelector(`[data-field="${f}"]`)?.value ?? '';
+      let c = null, ok = false;
+      if (ex.type === 'skill') {
+        ok = v('note').trim() !== '';
+      } else {
+        c = setValue(ex.type, { weight: parseFloat(v('weight')) || 0, reps: parseInt(v('reps')) || 0, seconds: parseFloat(v('seconds')) || 0 });
+        ok = !!c;
+      }
+      const pr = !!(c && best && beats(c, best));
+      row.classList.toggle('done', ok);
+      row.classList.toggle('pr', pr);
+      if (ok) exDone++;
+      if (pr) anyPr = true;
+    });
+    total += ex.sets;
+    done += exDone;
+    card.classList.toggle('done', ex.sets > 0 && exDone >= ex.sets);
+    card.classList.toggle('has-pr', anyPr);
+    const fill = card.querySelector('.ex-ring-fill');
+    if (fill) fill.style.strokeDashoffset = RING_C * (1 - (ex.sets ? exDone / ex.sets : 0));
+  });
+  const count = $('#save-count'), fill = $('#save-fill');
+  if (count) count.textContent = `${done}/${total} Sätze`;
+  if (fill) fill.style.width = (total ? (done / total) * 100 : 0) + '%';
 }
 
 function renderWarmupTimers(ex, exIdx) {
-  let html = '<p style="color:var(--text3);font-size:0.85rem;margin-bottom:10px">Warm-Up — ' + ex.target + '</p>';
+  let html = '<p style="color:var(--text3);font-size:0.85rem;margin-bottom:10px">Warm-Up, ' + ex.target + '</p>';
   for (let s = 0; s < ex.sets; s++) {
     html += `<div class="set-row">
       <span class="set-label">S${s+1}</span>
-      <button class="timer-btn" data-timer-ex="${exIdx}" data-timer-set="${s}">0:00.00</button>
+      <button class="timer-btn" data-timer-ex="${exIdx}" data-timer-set="${s}">${PLAY_ICON}Timer</button>
     </div>`;
   }
   return html;
@@ -1049,6 +1456,8 @@ function renderWarmupTimers(ex, exIdx) {
 
 function renderSetInputs(ex, exIdx, existingEntry, prevEntry) {
   let html = '';
+  // Unsaved input wins over the saved session; a saved 0 means "left empty" and is shown as empty
+  const val = (s, field, saved) => draftVal(ex.name, s, field) ?? (saved || '');
   for (let s = 0; s < ex.sets; s++) {
     const setData = existingEntry?.sets?.[s];
     const prevSet = prevEntry?.sets?.[s];
@@ -1056,36 +1465,39 @@ function renderSetInputs(ex, exIdx, existingEntry, prevEntry) {
     html += `<span class="set-label">S${s+1}</span>`;
 
     if (ex.type === 'weighted') {
-      const w = setData?.weight ?? '';
-      const r = setData?.reps ?? '';
+      const w = draftVal(ex.name, s, 'weight') ?? (setData && (setData.weight || setData.reps) ? setData.weight : '');
+      const r = val(s, 'reps', setData?.reps);
       const pw = prevSet ? `${prevSet.weight}kg` : '';
       const pr = prevSet ? `${prevSet.reps}` : '';
       html += `
-        <input type="number" step="0.5" min="0" placeholder="${pw || 'kg'}" value="${w}" data-ex="${exIdx}" data-set="${s}" data-field="weight">
+        <input type="number" inputmode="decimal" step="0.5" min="0" placeholder="${pw || 'kg'}" value="${w}" data-ex="${exIdx}" data-set="${s}" data-field="weight">
         <span class="set-unit">kg</span>
-        <input type="number" step="1" min="0" placeholder="${pr || 'Reps'}" value="${r}" data-ex="${exIdx}" data-set="${s}" data-field="reps">
+        <input type="number" inputmode="numeric" step="1" min="0" placeholder="${pr || 'Reps'}" value="${r}" data-ex="${exIdx}" data-set="${s}" data-field="reps">
         <span class="set-unit">Reps</span>
       `;
     } else if (ex.type === 'bodyweight') {
-      const r = setData?.reps ?? '';
+      const r = val(s, 'reps', setData?.reps);
       const pr = prevSet ? `${prevSet.reps}` : '';
       html += `
-        <input type="number" step="1" min="0" placeholder="${pr || 'Reps'}" value="${r}" data-ex="${exIdx}" data-set="${s}" data-field="reps">
+        <input type="number" inputmode="numeric" step="1" min="0" placeholder="${pr || 'Reps'}" value="${r}" data-ex="${exIdx}" data-set="${s}" data-field="reps">
         <span class="set-unit">Reps</span>
       `;
     } else if (ex.type === 'hold') {
-      const sec = setData?.seconds ?? '';
+      const sec = val(s, 'seconds', setData?.seconds);
       const ps = prevSet ? `${prevSet.seconds}` : '';
       html += `
-        <input type="number" step="0.01" min="0" placeholder="${ps || 'Sek'}" value="${sec}" data-ex="${exIdx}" data-set="${s}" data-field="seconds">
+        <input type="number" inputmode="decimal" step="0.01" min="0" placeholder="${ps || 'Sek'}" value="${sec}" data-ex="${exIdx}" data-set="${s}" data-field="seconds">
         <span class="set-unit">Sek</span>
-        <button class="timer-btn" data-timer-ex="${exIdx}" data-timer-set="${s}">0:00.00</button>
+        <button class="timer-btn" data-timer-ex="${exIdx}" data-timer-set="${s}">${PLAY_ICON}Timer</button>
       `;
     } else if (ex.type === 'skill') {
-      const n = setData?.note ?? '';
+      const n = val(s, 'note', setData?.note);
       const pn = prevSet?.note || '';
       html += `
         <textarea placeholder="${pn || 'Notiz...'}" data-ex="${exIdx}" data-set="${s}" data-field="note" rows="1">${n}</textarea>
+        <button class="check-btn" data-check-ex="${exIdx}" data-check-set="${s}" aria-label="Satz ${s+1} abhaken">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg>
+        </button>
       `;
     }
     html += `</div>`;
@@ -1127,7 +1539,7 @@ function saveSession() {
         setData.reps = parseInt(rEl?.value) || 0;
       } else if (ex.type === 'hold') {
         const sEl = document.querySelector(`[data-ex="${i}"][data-set="${s}"][data-field="seconds"]`);
-        setData.seconds = parseInt(sEl?.value) || 0;
+        setData.seconds = parseFloat(sEl?.value) || 0;
       } else if (ex.type === 'skill') {
         const nEl = document.querySelector(`[data-ex="${i}"][data-set="${s}"][data-field="note"]`);
         setData.note = nEl?.value || '';
@@ -1135,6 +1547,14 @@ function saveSession() {
       sets.push(setData);
     }
     entries.push({ name: ex.name, type: ex.type, sets });
+  });
+
+  // Records: compare with everything logged before this session
+  const prs = [];
+  entries.forEach(e => {
+    const v = bestOf(e.type, e.sets);
+    const prev = v && bestBefore(e.name, e.type);
+    if (prev && beats(v, prev)) prs.push({ name: e.name, type: e.type, v, prev });
   });
 
   // Remove existing session for same date+day
@@ -1147,7 +1567,80 @@ function saveSession() {
     entries
   });
   save();
-  toast('Session gespeichert!');
+  delete drafts[draftKey()];
+  saveDrafts();
+
+  // Week strip and streak change with a new session; the open cards stay as they are
+  renderHeader();
+  const week = $('#main .week');
+  if (week) week.outerHTML = weekHtml();
+
+  if (prs.length) showRecords(prs);
+  else toast('Session gespeichert');
+}
+
+function showRecords(prs) {
+  showModal(`
+    <div class="pr-sheet">
+      <svg class="pr-trophy" viewBox="0 0 48 48" aria-hidden="true"><path d="M16 8h16v10a8 8 0 0 1-16 0z"/><path d="M16 12H9v2a7 7 0 0 0 7.5 7M32 12h7v2a7 7 0 0 1-7.5 7M24 26v7M16 40h16M19 40c0-4 2-7 5-7s5 3 5 7"/></svg>
+      <h2>${prs.length === 1 ? 'Neuer Rekord' : prs.length + ' neue Rekorde'}</h2>
+      <div class="pr-sub">Session gespeichert</div>
+      <ul class="pr-list">
+        ${prs.map(p => `<li>
+          <span class="pr-name">${p.name}</span>
+          <span class="pr-val">${fmtBest(p.type, p.v)}</span>
+          <span class="pr-prev">vorher ${fmtBest(p.type, p.prev)}</span>
+        </li>`).join('')}
+      </ul>
+      <button class="btn-primary" style="width:100%" onclick="closeModal()">Weiter</button>
+    </div>
+  `);
+  confetti();
+  try { navigator.vibrate?.([60, 40, 60, 40, 160]); } catch (e) {}
+}
+
+function confetti() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const c = document.createElement('canvas');
+  c.className = 'confetti';
+  document.body.appendChild(c);
+  const dpr = window.devicePixelRatio || 1, W = innerWidth, H = innerHeight;
+  c.width = W * dpr;
+  c.height = H * dpr;
+  const ctx = c.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const colors = ['#ffd60a', '#30d158', '#0a84ff', '#f5f5f7'];
+  const parts = Array.from({ length: 120 }, (_, i) => ({
+    x: W / 2 + (Math.random() - 0.5) * 80,
+    y: H * 0.45,
+    vx: (Math.random() - 0.5) * 16,
+    vy: -Math.random() * 16 - 5,
+    size: 5 + Math.random() * 6,
+    rot: Math.random() * 6.28,
+    vr: (Math.random() - 0.5) * 0.4,
+    color: colors[i % colors.length]
+  }));
+  const t0 = performance.now(), life = 2.6;
+  (function frame(now) {
+    const age = (now - t0) / 1000;
+    ctx.clearRect(0, 0, W, H);
+    ctx.globalAlpha = Math.max(0, 1 - age / life);
+    parts.forEach(p => {
+      p.vy += 0.45;
+      p.vx *= 0.99;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size / 2, -p.size / 3, p.size, p.size * 0.66);
+      ctx.restore();
+    });
+    if (age < life) requestAnimationFrame(frame);
+    else c.remove();
+  })(t0);
 }
 
 // ===== HISTORY VIEW =====
@@ -1158,19 +1651,23 @@ function renderHistory(el) {
     return;
   }
 
+  const { bySession } = recordHistory();
   let html = '<h2 style="font-size:1.1rem;margin-bottom:12px">Trainings-Historie</h2>';
   sorted.forEach(session => {
+    const recs = bySession[session.id] || {};
+    const recCount = Object.keys(recs).length;
     html += `
       <div class="session-card" data-sid="${session.id}">
         <div class="session-header">
           <span class="session-date">${fmtDate(session.date)}</span>
-          <span class="session-day">${session.dayName}</span>
-          <span class="card-chevron" style="margin-left:auto">&#9654;</span>
+          <span class="session-day" style="flex:1;min-width:0">${session.dayName}</span>
+          ${recCount ? `<span class="pr-chip">${recCount} ${recCount === 1 ? 'Rekord' : 'Rekorde'}</span>` : ''}
+          <span class="card-chevron">&#9654;</span>
         </div>
         <div class="session-body">
           ${session.entries.map(e => `
             <div class="session-ex">
-              <div class="session-ex-name">${e.name} <span class="badge badge-${e.type}" style="font-size:0.65rem">${e.type}</span></div>
+              <div class="session-ex-name">${e.name} <span class="badge badge-${e.type}" style="font-size:0.65rem">${e.type}</span>${recs[e.name] ? ' <span class="pr-chip">Rekord</span>' : ''}</div>
               <div class="session-ex-sets">${formatSessionSets(e)}</div>
             </div>
           `).join('')}
@@ -1184,9 +1681,9 @@ function renderHistory(el) {
 
 function formatSessionSets(entry) {
   return entry.sets.map((s, i) => {
-    if (entry.type === 'weighted') return `S${i+1}: ${s.weight}kg x ${s.reps}`;
+    if (entry.type === 'weighted') return `S${i+1}: ${num(s.weight || 0)}kg x ${s.reps}`;
     if (entry.type === 'bodyweight') return `S${i+1}: ${s.reps} Reps`;
-    if (entry.type === 'hold') return `S${i+1}: ${s.seconds}s`;
+    if (entry.type === 'hold') return `S${i+1}: ${num(s.seconds || 0)}s`;
     if (entry.type === 'skill') return `S${i+1}: ${s.note || '-'}`;
     return '';
   }).join(' &nbsp;|&nbsp; ');
@@ -1195,7 +1692,8 @@ function formatSessionSets(entry) {
 // ===== PROGRESS VIEW =====
 function renderProgress(el) {
   const totalSessions = state.sessions.length;
-  const totalExercises = state.sessions.reduce((a, s) => a + s.entries.length, 0);
+  const streak = weekStreak();
+  const { records } = recordHistory();
   const totalSets = state.sessions.reduce((a, s) => a + s.entries.reduce((b, e) => b + e.sets.length, 0), 0);
   const lastBw = state.bodyweight.length ? [...state.bodyweight].sort((a,b) => b.date.localeCompare(a.date))[0] : null;
 
@@ -1207,7 +1705,7 @@ function renderProgress(el) {
   let html = `
     <div class="stat-grid">
       <div class="stat-card"><div class="stat-value">${totalSessions}</div><div class="stat-label">Sessions</div></div>
-      <div class="stat-card"><div class="stat-value">${totalExercises}</div><div class="stat-label">Übungen</div></div>
+      <div class="stat-card"><div class="stat-value">${streak}</div><div class="stat-label">${streak === 1 ? 'Woche' : 'Wochen'} in Folge</div></div>
       <div class="stat-card"><div class="stat-value">${totalSets}</div><div class="stat-label">Sätze</div></div>
       <div class="stat-card"><div class="stat-value">${lastBw ? lastBw.weight + ' kg' : '–'}</div><div class="stat-label">Körpergewicht</div></div>
     </div>
@@ -1238,6 +1736,22 @@ function renderProgress(el) {
       <div class="chart-container">
         <h3>Körpergewicht</h3>
         <canvas id="bw-chart" height="200"></canvas>
+      </div>
+    `;
+  }
+
+  if (records.length) {
+    records.sort((a, b) => b.date.localeCompare(a.date));
+    html += `
+      <div class="manage-section">
+        <div class="manage-section-title">Bestwerte</div>
+        ${records.map(r => `
+          <div class="rec-item">
+            <span class="rec-name">${r.name}</span>
+            <span class="rec-val">${fmtBest(r.type, r.v)}</span>
+            <span class="rec-date">${fmtDate(r.date)}</span>
+          </div>
+        `).join('')}
       </div>
     `;
   }
@@ -1320,7 +1834,7 @@ function drawLineChart(canvas, data, unit, color) {
 
   if (data.length < 1) return;
 
-  const pad = { top: 20, right: 16, bottom: 40, left: 50 };
+  const pad = { top: 20, right: 30, bottom: 40, left: 50 };
   const chartW = W - pad.left - pad.right;
   const chartH = H - pad.top - pad.bottom;
 
@@ -1513,8 +2027,8 @@ function renderManage(el) {
     <div class="manage-section">
       <div class="manage-section-title">Daten-Backup</div>
       <div style="padding:14px;display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn-ghost" id="export-btn">&#128190; JSON Export</button>
-        <button class="btn-ghost" id="import-btn">&#128194; JSON Import</button>
+        <button class="btn-ghost" id="export-btn">Backup exportieren</button>
+        <button class="btn-ghost" id="import-btn">Backup importieren</button>
         <input type="file" id="import-file" accept=".json" style="display:none">
       </div>
     </div>
@@ -1687,6 +2201,39 @@ document.addEventListener('click', e => {
     return;
   }
 
+  // Fullscreen timer controls
+  if (t.closest('#timer-stop')) { stopTimer(true); return; }
+  if (t.closest('#timer-cancel')) { stopTimer(false); return; }
+  if (t.closest('#timer-lead')) { cycleLead(); return; }
+  if (t.closest('#timer-sound')) { toggleSound(); return; }
+  if (t.closest('.timer-btn')) {
+    const btn = t.closest('.timer-btn');
+    openTimer(+btn.dataset.timerEx, +btn.dataset.timerSet);
+    return;
+  }
+
+  // Week strip: pick a day, jump a week, open the date picker
+  if (t.closest('.wd')) { setTrainingDate(t.closest('.wd').dataset.date); return; }
+  if (t.closest('[data-week-shift]')) {
+    setTrainingDate(addDays(state.trainingDate, +t.closest('[data-week-shift]').dataset.weekShift));
+    return;
+  }
+  if (t.id === 'train-date') {
+    try { t.showPicker?.(); } catch (err) {}
+    return;
+  }
+
+  // Skill set check-off: an empty note becomes a tick, a lone tick is removed again
+  if (t.closest('.check-btn')) {
+    const note = t.closest('.set-row').querySelector('[data-field="note"]');
+    if (note) {
+      if (note.value.trim() === '') note.value = '✓';
+      else if (note.value.trim() === '✓') note.value = '';
+      note.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    return;
+  }
+
   // Card toggle
   if (t.closest('.card-header')) {
     const card = t.closest('.card');
@@ -1710,6 +2257,8 @@ document.addEventListener('click', e => {
   // Delete session
   if (t.dataset.deleteSession) {
     if (confirm('Session wirklich löschen?')) {
+      const gone = state.sessions.find(s => s.id === t.dataset.deleteSession);
+      if (gone) { delete drafts[`${gone.date}|${gone.dayId}`]; saveDrafts(); }
       state.sessions = state.sessions.filter(s => s.id !== t.dataset.deleteSession);
       save();
       render();
@@ -2002,7 +2551,9 @@ document.addEventListener('change', e => {
           state.days = data.days;
           state.sessions = data.sessions || [];
           state.bodyweight = data.bodyweight || [];
-          state.selectedDayId = state.days[0]?.id || null;
+          state.selectedDayId = dayForDate(state.trainingDate) || state.days[0]?.id || null;
+          drafts = {};
+          saveDrafts();
           save();
           render();
           toast('Import erfolgreich!');
@@ -2032,9 +2583,19 @@ document.addEventListener('change', e => {
 
   // Training date
   if (e.target.id === 'train-date') {
-    state.trainingDate = e.target.value;
-    render();
+    setTrainingDate(e.target.value);
   }
+});
+
+// Set inputs: keep a draft and refresh rings, record marks and the save bar while typing
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (!el.dataset || !el.dataset.field || el.dataset.ex === undefined) return;
+  const ex = currentDay()?.exercises[+el.dataset.ex];
+  if (!ex) return;
+  (drafts[draftKey()] ||= {})[`${ex.name}|${el.dataset.set}|${el.dataset.field}`] = el.value;
+  saveDrafts();
+  updateProgressUI();
 });
 
 // ===== INIT =====
@@ -2051,8 +2612,14 @@ window.addEventListener('resize', () => {
   }, 200);
 });
 
-// ===== TIMERS =====
-const activeTimers = {}; // key: "exIdx-setIdx" → { interval, startTime }
+// ===== FULLSCREEN TIMER =====
+// One timer at a time, readable from across the mat. Holds get a lead-in to get into position,
+// a signal at the target time and another one when the previous best falls.
+const DIAL_C = 791.68; // circumference of the r=126 dial
+const LEAD_STEPS = [0, 3, 5, 10];
+let timer = null;
+let audioCtx = null;
+let wakeLock = null;
 
 function fmtTimer(ms) {
   const totalSec = ms / 1000;
@@ -2062,42 +2629,213 @@ function fmtTimer(ms) {
   return `${m}:${s.toString().padStart(2, '0')}.${cs.toString().padStart(2, '0')}`;
 }
 
-function toggleTimer(exIdx, setIdx) {
-  const key = `${exIdx}-${setIdx}`;
+// "3x45s" → 45, "4x10-15s" → 15, "2-3 min" → 180, "3x max" → null
+function parseGoalSeconds(target) {
+  const m = String(target || '').toLowerCase().match(/(\d+)(?:\s*-\s*(\d+))?\s*(sek|sec|min|s)\b/);
+  if (!m) return null;
+  const n = parseInt(m[2] || m[1]);
+  return m[3] === 'min' ? n * 60 : n;
+}
+
+function beep(freq, dur, delay = 0) {
+  if (!settings.sound || !audioCtx) return;
+  try {
+    const t = audioCtx.currentTime + delay;
+    const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.4, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + dur + 0.02);
+  } catch (e) {}
+}
+function buzz(pattern) {
+  try { navigator.vibrate?.(pattern); } catch (e) {}
+}
+
+function openTimer(exIdx, setIdx) {
+  const ex = currentDay()?.exercises[exIdx];
+  if (!ex || timer) return;
+  const isHold = ex.type === 'hold';
+  const best = isHold ? (trainBests[exIdx]?.a ?? null) : null;
+  const parsed = parseGoalSeconds(ex.target);
+  timer = {
+    exIdx, setIdx, isHold, best,
+    goal: parsed ?? best,           // no time in the target ("3x max") → chase the previous best
+    goalHit: parsed === null,       // then the best-signal alone marks the moment
+    bestHit: false,
+    phase: isHold && settings.lead > 0 ? 'lead' : 'run',
+    t0: Date.now(),
+    lastLead: null,
+    raf: 0
+  };
+
+  const facts = [];
+  if (parsed !== null) facts.push(`<div><span>Ziel</span><b>${num(parsed)} s</b></div>`);
+  if (best !== null) facts.push(`<div><span>Bestwert</span><b>${num(best)} s</b></div>`);
+
+  $('#timer-root').innerHTML = `
+    <div class="timer-overlay ${timer.phase}" id="timer-overlay" role="dialog" aria-label="Timer">
+      <div class="timer-top">
+        <div>
+          <div class="timer-ex">${ex.name}</div>
+          <div class="timer-set">Satz ${setIdx + 1} von ${ex.sets}</div>
+        </div>
+        <button class="timer-close" id="timer-cancel" aria-label="Timer verwerfen">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="timer-dial">
+        <svg viewBox="0 0 280 280" aria-hidden="true">
+          <circle class="dial-track" cx="140" cy="140" r="126"/>
+          <circle class="dial-fill" id="dial-fill" cx="140" cy="140" r="126" stroke-dasharray="${DIAL_C}" stroke-dashoffset="${DIAL_C}"/>
+        </svg>
+        <div class="timer-read">
+          <div class="timer-main" id="timer-main">0:00</div>
+          <div class="timer-cs" id="timer-cs"></div>
+        </div>
+      </div>
+      <div class="timer-status" id="timer-status"></div>
+      <div class="timer-facts">${facts.join('')}</div>
+      <div class="timer-opts">
+        ${isHold ? `<button class="timer-opt" id="timer-lead"></button>` : ''}
+        <button class="timer-opt" id="timer-sound"></button>
+      </div>
+      <button class="timer-stop" id="timer-stop"></button>
+    </div>`;
+  paintTimerOptions();
+
+  // Audio has to be unlocked inside the tap that opened the timer
+  try {
+    audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) {}
+  // Keep the screen on while the clock runs
+  try { navigator.wakeLock?.request('screen').then(l => { wakeLock = l; if (!timer) l.release(); }).catch(() => {}); } catch (e) {}
+
+  tickTimer();
+}
+
+function paintTimerOptions() {
+  const lead = $('#timer-lead'), sound = $('#timer-sound'), stop = $('#timer-stop');
+  if (lead) lead.textContent = settings.lead ? `Vorlauf ${settings.lead} s` : 'Kein Vorlauf';
+  if (sound) sound.textContent = settings.sound ? 'Ton an' : 'Ton aus';
+  if (stop && timer) stop.textContent = timer.phase === 'lead' ? 'Abbrechen' : 'Stopp';
+}
+
+function cycleLead() {
+  settings.lead = LEAD_STEPS[(LEAD_STEPS.indexOf(settings.lead) + 1) % LEAD_STEPS.length];
+  saveSettings();
+  // Changing it during the lead-in restarts the lead-in with the new length
+  if (timer && timer.phase === 'lead') {
+    timer.t0 = Date.now();
+    timer.lastLead = null;
+    if (!settings.lead) startRun();
+  }
+  paintTimerOptions();
+}
+
+function toggleSound() {
+  settings.sound = !settings.sound;
+  saveSettings();
+  paintTimerOptions();
+}
+
+function startRun() {
+  timer.phase = 'run';
+  timer.t0 = Date.now();
+  $('#timer-overlay')?.classList.remove('lead');
+  $('#timer-status').textContent = '';
+  beep(1320, 0.3);
+  buzz(90);
+  paintTimerOptions();
+}
+
+function tickTimer() {
+  if (!timer) return;
+  const overlay = $('#timer-overlay'), main = $('#timer-main'), cs = $('#timer-cs'), fill = $('#dial-fill'), status = $('#timer-status');
+  if (!overlay) { timer = null; return; }
+  const now = Date.now();
+
+  if (timer.phase === 'lead') {
+    const left = settings.lead * 1000 - (now - timer.t0);
+    if (left <= 0) {
+      startRun();
+    } else {
+      const sec = Math.ceil(left / 1000);
+      if (sec !== timer.lastLead) {
+        timer.lastLead = sec;
+        main.textContent = sec;
+        cs.textContent = '';
+        status.textContent = 'In Position gehen';
+        if (sec <= 3) beep(660, 0.1);
+      }
+      fill.style.strokeDashoffset = DIAL_C * (1 - left / (settings.lead * 1000));
+    }
+  }
+
+  if (timer.phase === 'run') {
+    const ms = Date.now() - timer.t0;
+    const sec = ms / 1000;
+    main.textContent = `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
+    cs.textContent = '.' + String(Math.floor((ms % 1000) / 10)).padStart(2, '0');
+    // Dial fills towards the goal; without a goal it sweeps once per minute
+    const frac = timer.goal ? Math.min(1, sec / timer.goal) : (sec % 60) / 60;
+    fill.style.strokeDashoffset = DIAL_C * (1 - frac);
+
+    if (!timer.goalHit && timer.goal && sec >= timer.goal) {
+      timer.goalHit = true;
+      status.textContent = 'Ziel erreicht';
+      beep(990, 0.14);
+      beep(990, 0.14, 0.2);
+      buzz([120, 70, 120]);
+    }
+    if (!timer.bestHit && timer.best !== null && sec > timer.best) {
+      timer.bestHit = true;
+      overlay.classList.add('best');
+      status.textContent = 'Neuer Bestwert';
+      beep(990, 0.12);
+      beep(1320, 0.12, 0.16);
+      beep(1760, 0.24, 0.32);
+      buzz([80, 50, 80, 50, 200]);
+    }
+  }
+
+  timer.raf = requestAnimationFrame(tickTimer);
+}
+
+// commit = take the time over into the set; a stop during the lead-in never counts
+function stopTimer(commit) {
+  if (!timer) return;
+  cancelAnimationFrame(timer.raf);
+  const { exIdx, setIdx, phase, t0 } = timer;
+  timer = null;
+  try { wakeLock?.release(); } catch (e) {}
+  wakeLock = null;
+  $('#timer-root').innerHTML = '';
+
+  if (!commit || phase !== 'run') return;
+  const ms = Date.now() - t0;
   const btn = document.querySelector(`[data-timer-ex="${exIdx}"][data-timer-set="${setIdx}"]`);
   const input = document.querySelector(`[data-ex="${exIdx}"][data-set="${setIdx}"][data-field="seconds"]`);
-  if (!btn) return;
-
-  if (activeTimers[key]) {
-    // Stop timer
-    clearInterval(activeTimers[key].interval);
-    const elapsedMs = Date.now() - activeTimers[key].startTime;
-    const elapsedSec = Math.round(elapsedMs / 10) / 100; // 2 decimal places
-    if (input) input.value = elapsedSec;
-    btn.classList.remove('running');
-    btn.textContent = fmtTimer(elapsedMs);
-    delete activeTimers[key];
-  } else {
-    // Start timer
-    const startTime = Date.now();
-    activeTimers[key] = {
-      startTime,
-      interval: setInterval(() => {
-        btn.textContent = fmtTimer(Date.now() - startTime);
-      }, 30)
-    };
-    btn.classList.add('running');
-    btn.textContent = '0:00.00';
+  if (btn) {
+    btn.textContent = fmtTimer(ms);
+    btn.classList.add('timed');
+  }
+  if (input) {
+    input.value = Math.round(ms / 10) / 100;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
   }
 }
 
-document.addEventListener('click', e => {
-  const timerBtn = e.target.closest('.timer-btn');
-  if (timerBtn) {
-    e.stopPropagation();
-    toggleTimer(timerBtn.dataset.timerEx, timerBtn.dataset.timerSet);
+// The lock is dropped when the app goes to the background; take it again on return
+document.addEventListener('visibilitychange', () => {
+  if (timer && document.visibilityState === 'visible') {
+    try { navigator.wakeLock?.request('screen').then(l => { wakeLock = l; if (!timer) l.release(); }).catch(() => {}); } catch (e) {}
   }
-}, true);
+});
 
 // ===== SERVICE WORKER REGISTRATION =====
 if ('serviceWorker' in navigator) {
