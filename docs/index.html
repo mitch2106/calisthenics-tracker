@@ -1352,6 +1352,7 @@ function renderTraining(el) {
     const isWarmup = ex.type === 'warmup';
     const badgeClass = `badge-${ex.type}`;
     const typeLabel = {weighted:'Weighted',bodyweight:'Bodyweight',hold:'Hold',skill:'Skill',warmup:'Warm-Up'}[ex.type];
+    const hasInfo = !!exerciseDb[ex.name];
     if (!isWarmup && ex.type !== 'skill') trainBests[i] = bestBefore(ex.name, ex.type);
 
     html += `
@@ -1374,10 +1375,10 @@ function renderTraining(el) {
           <span class="card-chevron">&#9654;</span>
         </div>
         <div class="card-body">
-          <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
-            <button class="btn-ghost btn-sm ex-info-btn" data-name="${ex.name}">Anleitung</button>
+          ${hasInfo || !isWarmup ? `<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+            ${hasInfo ? `<button class="btn-ghost btn-sm ex-info-btn" data-name="${ex.name}">Anleitung</button>` : ''}
             ${!isWarmup ? `<button class="btn-ghost btn-sm ex-swap-btn" data-idx="${i}">Tauschen</button>` : ''}
-          </div>
+          </div>` : ''}
           <div class="ex-info" id="info-${i}"></div>
           <div class="swap-list" id="swap-${i}" style="display:none"></div>
           ${isWarmup ? renderWarmupTimers(ex, i) : renderSetInputs(ex, i, existingEntry, prevEntry)}
