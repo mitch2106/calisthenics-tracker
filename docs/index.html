@@ -289,7 +289,6 @@ button:focus-visible, .wd:focus-visible { outline: 2px solid var(--accent); outl
   transition: stroke-dashoffset .35s cubic-bezier(.4,0,.2,1);
 }
 .ex-ring-check { fill: none; stroke: #000; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity .2s; }
-.ex-ring.untracked .ex-ring-track { stroke-dasharray: 2 4.9; }
 .card.done .ex-ring-track { fill: var(--accent); stroke: var(--accent); }
 .card.done .ex-ring-check { opacity: 1; }
 .pr-chip {
@@ -317,7 +316,7 @@ button:focus-visible, .wd:focus-visible { outline: 2px solid var(--accent); outl
 }
 .badge-weighted { background: var(--blue-dim); color: var(--blue); }
 .badge-bodyweight { background: var(--accent-dim); color: var(--accent); }
-.badge-hold { background: var(--warn-dim); color: var(--warn); }
+.badge-hold, .badge-whold { background: var(--warn-dim); color: var(--warn); }
 .badge-skill { background: var(--purple-dim); color: var(--purple); }
 .badge-warmup { background: rgba(118,118,128,0.12); color: var(--text3); }
 .target-text { font-size: 0.8rem; color: var(--text2); font-weight: 500; }
@@ -359,6 +358,28 @@ button:focus-visible, .wd:focus-visible { outline: 2px solid var(--accent); outl
 .set-row input, .set-row textarea { flex: 1; }
 .set-row input[type="number"] { max-width: 100px; }
 .set-unit { font-size: 0.8rem; color: var(--text3); flex-shrink: 0; font-weight: 500; }
+/* Weight, time and timer in one row: less padding so the numbers still fit on a phone */
+.set-row.tight { gap: 8px; }
+.set-row.tight input[type="number"] { padding-left: 8px; padding-right: 8px; }
+
+/* Choice between the two variants of one exercise */
+.variant-pick {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 14px;
+  background: rgba(118,118,128,0.12);
+  border-radius: var(--radius-sm);
+}
+.variant-btn {
+  flex: 1;
+  min-height: 40px;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  color: var(--text2);
+  background: none;
+}
+.variant-btn.active { background: var(--accent); color: #000; }
 
 /* Day selector */
 .day-selector {
@@ -730,6 +751,14 @@ button:focus-visible, .wd:focus-visible { outline: 2px solid var(--accent); outl
   margin-bottom: 6px;
   letter-spacing: 0.01em;
 }
+.modal-sub {
+  margin: 22px 0 4px;
+  padding-top: 16px;
+  border-top: 1px solid var(--separator);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.modal-hint { font-size: 0.8rem; color: var(--text3); margin-bottom: 14px; line-height: 1.4; }
 .modal-actions {
   display: flex;
   gap: 10px;
@@ -868,6 +897,7 @@ button:focus-visible, .wd:focus-visible { outline: 2px solid var(--accent); outl
 .timer-btn:active { transform: scale(0.96); }
 .timer-btn svg { width: 12px; height: 12px; fill: currentColor; }
 .timer-btn.timed { background: var(--accent-dim); color: var(--accent); }
+.timer-btn.compact { min-width: 42px; padding: 8px; }
 
 /* Prev session hint */
 .prev-hint {
@@ -1089,7 +1119,10 @@ function getDefaultDays() {
         { id: uid(), name: 'Cat-Cow & Shoulder CARs', type: 'warmup', sets: 2, target: '2x10', rir: '' },
         { id: uid(), name: 'Front Lever Tuck Hold', type: 'hold', sets: 4, target: '4x10-15s', rir: '2-3' },
         { id: uid(), name: 'Weighted Pull-Ups', type: 'weighted', sets: 4, target: '4x5-8', rir: '1-2' },
-        { id: uid(), name: 'Ring Rows / Cable Rows', type: 'bodyweight', sets: 3, target: '3x10-12', rir: '1-2' },
+        { id: uid(), name: 'Ring Rows / Cable Rows', type: 'bodyweight', sets: 3, target: '3x10-12', rir: '1-2', variants: [
+          { name: 'Ring Rows', type: 'bodyweight', target: '3x10-12' },
+          { name: 'Cable Rows', type: 'weighted', target: '3x10-12' }
+        ] },
         { id: uid(), name: 'Face Pulls', type: 'weighted', sets: 3, target: '3x15', rir: '0-1' },
         { id: uid(), name: 'Leg Raises Hanging', type: 'bodyweight', sets: 3, target: '3x10-15', rir: '0-1' },
         { id: uid(), name: 'L-Sit Ring Hold', type: 'hold', sets: 3, target: '3x max hold', rir: '2-3' }
@@ -1103,10 +1136,13 @@ function getDefaultDays() {
         { id: uid(), name: 'ATG Split Squats', type: 'warmup', sets: 2, target: '2x8', rir: '' },
         { id: uid(), name: 'Tibialis Raises', type: 'warmup', sets: 2, target: '2x15', rir: '' },
         { id: uid(), name: 'Trap Bar Deadlifts', type: 'weighted', sets: 4, target: '4x5-6', rir: '1-2' },
-        { id: uid(), name: 'Bulgarian Split Squats', type: 'bodyweight', sets: 3, target: '3x8-10/leg', rir: '1-2' },
+        { id: uid(), name: 'Bulgarian Split Squats', type: 'weighted', sets: 3, target: '3x8-10/leg', rir: '1-2' },
         { id: uid(), name: 'Glute Ham Raises / Back Extensions', type: 'weighted', sets: 3, target: '3x12', rir: '1-2' },
-        { id: uid(), name: 'Cable Crunches / Weighted Plank', type: 'hold', sets: 3, target: '3x max', rir: '0-1' },
-        { id: uid(), name: 'Calf Raises', type: 'bodyweight', sets: 3, target: '3x20', rir: '0-1' }
+        { id: uid(), name: 'Cable Crunches / Weighted Plank', type: 'weighted', sets: 3, target: '3x12-15', rir: '0-1', variants: [
+          { name: 'Cable Crunches', type: 'weighted', target: '3x12-15' },
+          { name: 'Weighted Plank', type: 'whold', target: '3x max' }
+        ] },
+        { id: uid(), name: 'Calf Raises', type: 'weighted', sets: 3, target: '3x20', rir: '0-1' }
       ]
     },
     {
@@ -1137,8 +1173,47 @@ let state = {
   selectedDayId: null
 };
 
+const DATA_VERSION = 2;
+const TYPE_LABEL = { weighted: 'Weighted', bodyweight: 'Bodyweight', hold: 'Hold', whold: 'Weighted Hold', skill: 'Skill', warmup: 'Warm-Up' };
+
+// Brings stored data (localStorage or an imported backup) up to the current format.
+// Version 2: loaded exercises get a weight field, and "A / B" exercises that need different
+// inputs per variant become a choice between the two.
+function migrate(d) {
+  if ((d.v || 1) < 2) {
+    const loaded = ['Bulgarian Split Squats', 'Calf Raises'];
+    (d.days || []).forEach(day => (day.exercises || []).forEach(ex => {
+      if (ex.variants) return;
+      if (ex.type === 'bodyweight' && loaded.includes(ex.name)) {
+        ex.type = 'weighted';
+      } else if (ex.name === 'Cable Crunches / Weighted Plank') {
+        ex.variants = [
+          { name: 'Cable Crunches', type: 'weighted', target: '3x12-15' },
+          { name: 'Weighted Plank', type: 'whold', target: ex.target || '3x max' }
+        ];
+      } else if (ex.name === 'Ring Rows / Cable Rows') {
+        ex.variants = [
+          { name: 'Ring Rows', type: 'bodyweight', target: ex.target || '' },
+          { name: 'Cable Rows', type: 'weighted', target: ex.target || '' }
+        ];
+      }
+      if (ex.variants) { ex.type = ex.variants[0].type; ex.target = ex.variants[0].target; }
+    }));
+    // Sets logged without a weight field stay comparable as 0 kg
+    (d.sessions || []).forEach(s => (s.entries || []).forEach(e => {
+      if (e.type === 'bodyweight' && loaded.includes(e.name)) {
+        e.type = 'weighted';
+        (e.sets || []).forEach(x => { x.weight = 0; });
+      }
+    }));
+  }
+  d.v = DATA_VERSION;
+  return d;
+}
+
 function save() {
   localStorage.setItem('calitracker', JSON.stringify({
+    v: DATA_VERSION,
     days: state.days,
     sessions: state.sessions,
     bodyweight: state.bodyweight
@@ -1150,9 +1225,16 @@ function load() {
   if (raw) {
     try {
       const d = JSON.parse(raw);
+      const stored = d.v || 1;
+      if (stored < DATA_VERSION) {
+        // Untouched copy of the data as it was before the format change
+        try { localStorage.setItem(`calitracker-before-v${DATA_VERSION}`, raw); } catch (e) {}
+        migrate(d);
+      }
       state.days = d.days || [];
       state.sessions = d.sessions || [];
       state.bodyweight = d.bodyweight || [];
+      if (stored < DATA_VERSION) save();
     } catch(e) {
       state.days = getDefaultDays();
     }
@@ -1262,7 +1344,14 @@ function setValue(type, s) {
   if (type === 'weighted') return (s.reps || 0) > 0 ? { a: s.weight || 0, b: s.reps } : null;
   if (type === 'bodyweight') return (s.reps || 0) > 0 ? { a: s.reps, b: 0 } : null;
   if (type === 'hold') return (s.seconds || 0) > 0 ? { a: s.seconds, b: 0 } : null;
+  if (type === 'whold') return (s.seconds || 0) > 0 ? { a: s.weight || 0, b: s.seconds } : null;
   return null;
+}
+// Whether a set counts as done. Skill sets need a note; warm-ups need reps or a time and never set records
+function setDone(type, s) {
+  if (type === 'skill') return (s.note || '').trim() !== '';
+  if (type === 'warmup') return (s.reps || 0) > 0 || (s.seconds || 0) > 0;
+  return !!setValue(type, s);
 }
 const beats = (c, b) => c.a > b.a || (c.a === b.a && c.b > b.b);
 function bestOf(type, sets) {
@@ -1271,7 +1360,8 @@ function bestOf(type, sets) {
   return best;
 }
 function fmtBest(type, v) {
-  if (type === 'weighted') return `${num(v.a)} kg × ${v.b}`;
+  if (type === 'weighted') return v.a ? `${num(v.a)} kg × ${v.b}` : `${v.b} Reps`;
+  if (type === 'whold') return v.a ? `${num(v.a)} kg × ${num(v.b)} s` : `${num(v.b)} s`;
   if (type === 'bodyweight') return `${v.a} Reps`;
   return `${num(v.a)} s`;
 }
@@ -1324,9 +1414,9 @@ function render() {
 // ===== TRAINING VIEW =====
 function renderTraining(el) {
   const day = state.days.find(d => d.id === state.selectedDayId);
-  const prevSession = getPrevSession(state.selectedDayId, state.trainingDate);
 
   trainBests = {};
+  trainExs = [];
 
   let html = `
     ${weekHtml()}
@@ -1346,27 +1436,30 @@ function renderTraining(el) {
   // Check if session exists for this date+day
   const existing = state.sessions.find(s => s.date === state.trainingDate && s.dayId === day.id);
 
-  day.exercises.forEach((ex, i) => {
-    const prevEntry = prevSession?.entries?.find(e => e.name === ex.name);
-    const existingEntry = existing?.entries?.find(e => e.name === ex.name);
+  trainExs = day.exercises.map(ex => resolveEx(ex, existing));
+
+  trainExs.forEach((ex, i) => {
+    const sameEx = e => e.name === ex.name && e.type === ex.type;
+    const existingEntry = existing?.entries?.find(sameEx);
+    const prevEntry = getPrevEntry(day.id, state.trainingDate, sameEx);
     const isWarmup = ex.type === 'warmup';
-    const badgeClass = `badge-${ex.type}`;
-    const typeLabel = {weighted:'Weighted',bodyweight:'Bodyweight',hold:'Hold',skill:'Skill',warmup:'Warm-Up'}[ex.type];
-    const hasInfo = !!exerciseDb[ex.name];
+    const infoName = ex.planName || ex.name;
+    const hasInfo = !!exerciseDb[infoName];
+    const canSwap = !isWarmup && !ex.variants;
     if (!isWarmup && ex.type !== 'skill') trainBests[i] = bestBefore(ex.name, ex.type);
 
     html += `
       <div class="card" data-ex-idx="${i}">
         <div class="card-header">
-          <svg class="ex-ring${isWarmup ? ' untracked' : ''}" viewBox="0 0 28 28" aria-hidden="true">
+          <svg class="ex-ring" viewBox="0 0 28 28" aria-hidden="true">
             <circle class="ex-ring-track" cx="14" cy="14" r="11"/>
-            ${isWarmup ? '' : `<circle class="ex-ring-fill" cx="14" cy="14" r="11" stroke-dasharray="${RING_C}" stroke-dashoffset="${RING_C}"/>
-            <path class="ex-ring-check" d="M9 14.5l3.2 3.2L19 11"/>`}
+            <circle class="ex-ring-fill" cx="14" cy="14" r="11" stroke-dasharray="${RING_C}" stroke-dashoffset="${RING_C}"/>
+            <path class="ex-ring-check" d="M9 14.5l3.2 3.2L19 11"/>
           </svg>
           <div class="ex-head">
             <span class="ex-name">${ex.name}</span>
             <div class="ex-meta">
-              <span class="badge ${badgeClass}">${typeLabel}</span>
+              <span class="badge badge-${ex.type}">${TYPE_LABEL[ex.type]}</span>
               <span class="target-text">${ex.target}</span>
               ${ex.rir ? `<span class="rir-text">RIR ${ex.rir}</span>` : ''}
               <span class="pr-chip ex-pr">Rekord</span>
@@ -1375,13 +1468,16 @@ function renderTraining(el) {
           <span class="card-chevron">&#9654;</span>
         </div>
         <div class="card-body">
-          ${hasInfo || !isWarmup ? `<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
-            ${hasInfo ? `<button class="btn-ghost btn-sm ex-info-btn" data-name="${ex.name}">Anleitung</button>` : ''}
-            ${!isWarmup ? `<button class="btn-ghost btn-sm ex-swap-btn" data-idx="${i}">Tauschen</button>` : ''}
+          ${ex.variants ? `<div class="variant-pick" role="group" aria-label="Variante wählen">
+            ${ex.variants.map((v, k) => `<button class="variant-btn${k === ex.variant ? ' active' : ''}" data-variant-ex="${i}" data-variant="${k}" aria-pressed="${k === ex.variant}">${v.name}</button>`).join('')}
+          </div>` : ''}
+          ${hasInfo || canSwap ? `<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+            ${hasInfo ? `<button class="btn-ghost btn-sm ex-info-btn" data-name="${infoName}">Anleitung</button>` : ''}
+            ${canSwap ? `<button class="btn-ghost btn-sm ex-swap-btn" data-idx="${i}">Tauschen</button>` : ''}
           </div>` : ''}
           <div class="ex-info" id="info-${i}"></div>
           <div class="swap-list" id="swap-${i}" style="display:none"></div>
-          ${isWarmup ? renderWarmupTimers(ex, i) : renderSetInputs(ex, i, existingEntry, prevEntry)}
+          ${isWarmup ? renderWarmupSets(ex, i, existingEntry) : renderSetInputs(ex, i, existingEntry, prevEntry)}
         </div>
       </div>
     `;
@@ -1403,37 +1499,56 @@ function renderTraining(el) {
 
 const RING_C = 69.12; // circumference of the r=11 progress ring on each exercise card
 let trainBests = {};  // exercise index → best value before this session, for live record marks
+let trainExs = [];    // the day's exercises as shown in the training view, with the chosen variant applied
 const PLAY_ICON = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1.2v9.6L10.5 6z"/></svg>';
+const CHECK_ICON = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg>';
+
+// An exercise with two variants ("Cable Crunches / Weighted Plank") is logged under the name and
+// type of the one chosen for the session. The choice: tapped just now, else what the saved session
+// holds, else what was done last time, else the first.
+function variantIndex(ex, existing) {
+  const tapped = drafts[draftKey()]?.[`${ex.id}|variant`];
+  if (tapped !== undefined && ex.variants[+tapped]) return +tapped;
+  const usedIn = s => ex.variants.findIndex(v => (s.entries || []).some(e => e.name === v.name));
+  const past = state.sessions.filter(s => s.date <= state.trainingDate).sort((a, b) => b.date.localeCompare(a.date));
+  for (const s of existing ? [existing, ...past] : past) {
+    const k = usedIn(s);
+    if (k >= 0) return k;
+  }
+  return 0;
+}
+function resolveEx(ex, existing) {
+  if (!ex.variants) return ex;
+  const variant = variantIndex(ex, existing);
+  return { ...ex, ...ex.variants[variant], planName: ex.name, variant };
+}
 
 // Reads the set inputs on screen and updates rings, record marks and the save bar
 function updateProgressUI() {
   if (state.currentTab !== 'training') return;
-  const day = currentDay();
-  if (!day) return;
   let done = 0, total = 0;
   $$('#main .card[data-ex-idx]').forEach(card => {
     const i = +card.dataset.exIdx;
-    const ex = day.exercises[i];
-    if (!ex || ex.type === 'warmup') return;
+    const ex = trainExs[i];
+    if (!ex) return;
     const best = trainBests[i];
     let exDone = 0, anyPr = false;
     card.querySelectorAll('.set-row').forEach(row => {
       const v = f => row.querySelector(`[data-field="${f}"]`)?.value ?? '';
-      let c = null, ok = false;
-      if (ex.type === 'skill') {
-        ok = v('note').trim() !== '';
-      } else {
-        c = setValue(ex.type, { weight: parseFloat(v('weight')) || 0, reps: parseInt(v('reps')) || 0, seconds: parseFloat(v('seconds')) || 0 });
-        ok = !!c;
-      }
+      const set = { weight: parseFloat(v('weight')) || 0, reps: parseInt(v('reps')) || 0, seconds: parseFloat(v('seconds')) || 0, note: v('note') };
+      const ok = setDone(ex.type, set);
+      const c = setValue(ex.type, set);
       const pr = !!(c && best && beats(c, best));
       row.classList.toggle('done', ok);
       row.classList.toggle('pr', pr);
       if (ok) exDone++;
       if (pr) anyPr = true;
     });
-    total += ex.sets;
-    done += exDone;
+    // Warm-ups get their own tick but stay out of the set count
+    if (ex.type !== 'warmup') {
+      total += ex.sets;
+      done += exDone;
+    }
     card.classList.toggle('done', ex.sets > 0 && exDone >= ex.sets);
     card.classList.toggle('has-pr', anyPr);
     const fill = card.querySelector('.ex-ring-fill');
@@ -1444,12 +1559,31 @@ function updateProgressUI() {
   if (fill) fill.style.width = (total ? (done / total) * 100 : 0) + '%';
 }
 
-function renderWarmupTimers(ex, exIdx) {
+// "2x15" → 15, "3x8-10/leg" → 10, "3x max" → null
+function parseGoalReps(target) {
+  const m = String(target || '').toLowerCase().replace(/^\s*\d+\s*x\s*/, '').match(/^(\d+)(?:\s*-\s*(\d+))?/);
+  return m ? parseInt(m[2] || m[1]) : null;
+}
+
+// Warm-ups with a time in the target ("30s", "2-3 min") run on the timer, all others count reps.
+// The tick marks a set as done at the target without typing or timing it.
+function renderWarmupSets(ex, exIdx, existingEntry) {
+  const goalSec = parseGoalSeconds(ex.target);
+  const timed = goalSec !== null;
+  const field = timed ? 'seconds' : 'reps';
+  const goal = timed ? goalSec : (parseGoalReps(ex.target) ?? 1);
   let html = '<p style="color:var(--text3);font-size:0.85rem;margin-bottom:10px">Warm-Up, ' + ex.target + '</p>';
   for (let s = 0; s < ex.sets; s++) {
+    const v = draftVal(ex.name, s, field) ?? (existingEntry?.sets?.[s]?.[field] || '');
+    const attrs = `value="${v}" data-ex="${exIdx}" data-set="${s}" data-field="${field}"`;
     html += `<div class="set-row">
       <span class="set-label">S${s+1}</span>
-      <button class="timer-btn" data-timer-ex="${exIdx}" data-timer-set="${s}">${PLAY_ICON}Timer</button>
+      ${timed
+        ? `<input type="hidden" ${attrs}>
+           <button class="timer-btn" data-timer-ex="${exIdx}" data-timer-set="${s}">${PLAY_ICON}Timer</button>`
+        : `<input type="number" inputmode="numeric" step="1" min="0" placeholder="${goal}" ${attrs}>
+           <span class="set-unit">Reps</span>`}
+      <button class="check-btn" data-fill="${goal}" aria-label="Satz ${s+1} abhaken">${CHECK_ICON}</button>
     </div>`;
   }
   return html;
@@ -1462,11 +1596,11 @@ function renderSetInputs(ex, exIdx, existingEntry, prevEntry) {
   for (let s = 0; s < ex.sets; s++) {
     const setData = existingEntry?.sets?.[s];
     const prevSet = prevEntry?.sets?.[s];
-    html += `<div class="set-row">`;
+    html += `<div class="set-row${ex.type === 'whold' ? ' tight' : ''}">`;
     html += `<span class="set-label">S${s+1}</span>`;
 
     if (ex.type === 'weighted') {
-      const w = draftVal(ex.name, s, 'weight') ?? (setData && (setData.weight || setData.reps) ? setData.weight : '');
+      const w = val(s, 'weight', setData?.weight);
       const r = val(s, 'reps', setData?.reps);
       const pw = prevSet ? `${prevSet.weight}kg` : '';
       const pr = prevSet ? `${prevSet.reps}` : '';
@@ -1491,14 +1625,22 @@ function renderSetInputs(ex, exIdx, existingEntry, prevEntry) {
         <span class="set-unit">Sek</span>
         <button class="timer-btn" data-timer-ex="${exIdx}" data-timer-set="${s}">${PLAY_ICON}Timer</button>
       `;
+    } else if (ex.type === 'whold') {
+      const w = val(s, 'weight', setData?.weight);
+      const sec = val(s, 'seconds', setData?.seconds);
+      html += `
+        <input type="number" inputmode="decimal" step="0.5" min="0" placeholder="${prevSet ? prevSet.weight : 'kg'}" value="${w}" data-ex="${exIdx}" data-set="${s}" data-field="weight">
+        <span class="set-unit">kg</span>
+        <input type="number" inputmode="decimal" step="0.01" min="0" placeholder="${prevSet ? prevSet.seconds : 'Sek'}" value="${sec}" data-ex="${exIdx}" data-set="${s}" data-field="seconds">
+        <span class="set-unit">Sek</span>
+        <button class="timer-btn compact" data-timer-ex="${exIdx}" data-timer-set="${s}" aria-label="Timer für Satz ${s+1} starten">${PLAY_ICON}</button>
+      `;
     } else if (ex.type === 'skill') {
       const n = val(s, 'note', setData?.note);
       const pn = prevSet?.note || '';
       html += `
         <textarea placeholder="${pn || 'Notiz...'}" data-ex="${exIdx}" data-set="${s}" data-field="note" rows="1">${n}</textarea>
-        <button class="check-btn" data-check-ex="${exIdx}" data-check-set="${s}" aria-label="Satz ${s+1} abhaken">
-          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg>
-        </button>
+        <button class="check-btn" aria-label="Satz ${s+1} abhaken">${CHECK_ICON}</button>
       `;
     }
     html += `</div>`;
@@ -1507,6 +1649,7 @@ function renderSetInputs(ex, exIdx, existingEntry, prevEntry) {
       if (ex.type === 'weighted') hint = `Vorher: ${prevSet.weight}kg x ${prevSet.reps}`;
       else if (ex.type === 'bodyweight') hint = `Vorher: ${prevSet.reps} Reps`;
       else if (ex.type === 'hold') hint = `Vorher: ${prevSet.seconds}s`;
+      else if (ex.type === 'whold') hint = `Vorher: ${prevSet.weight}kg x ${prevSet.seconds}s`;
       else if (ex.type === 'skill' && prevSet.note) hint = `Vorher: ${prevSet.note}`;
       if (hint) html += `<div class="prev-hint">${hint}</div>`;
     }
@@ -1514,10 +1657,12 @@ function renderSetInputs(ex, exIdx, existingEntry, prevEntry) {
   return html;
 }
 
-function getPrevSession(dayId, beforeDate) {
-  return state.sessions
-    .filter(s => s.dayId === dayId && s.date < beforeDate)
-    .sort((a, b) => b.date.localeCompare(a.date))[0] || null;
+// The entry of the most recent earlier session of this plan day that holds the exercise
+function getPrevEntry(dayId, beforeDate, match) {
+  const session = state.sessions
+    .filter(s => s.dayId === dayId && s.date < beforeDate && s.entries.some(match))
+    .sort((a, b) => b.date.localeCompare(a.date))[0];
+  return session?.entries.find(match) || null;
 }
 
 function saveSession() {
@@ -1525,27 +1670,19 @@ function saveSession() {
   if (!day) return;
 
   const entries = [];
-  day.exercises.forEach((ex, i) => {
-    if (ex.type === 'warmup') return;
+  trainExs.forEach((ex, i) => {
     const sets = [];
     for (let s = 0; s < ex.sets; s++) {
-      const setData = {};
-      if (ex.type === 'weighted') {
-        const wEl = document.querySelector(`[data-ex="${i}"][data-set="${s}"][data-field="weight"]`);
-        const rEl = document.querySelector(`[data-ex="${i}"][data-set="${s}"][data-field="reps"]`);
-        setData.weight = parseFloat(wEl?.value) || 0;
-        setData.reps = parseInt(rEl?.value) || 0;
-      } else if (ex.type === 'bodyweight') {
-        const rEl = document.querySelector(`[data-ex="${i}"][data-set="${s}"][data-field="reps"]`);
-        setData.reps = parseInt(rEl?.value) || 0;
-      } else if (ex.type === 'hold') {
-        const sEl = document.querySelector(`[data-ex="${i}"][data-set="${s}"][data-field="seconds"]`);
-        setData.seconds = parseFloat(sEl?.value) || 0;
-      } else if (ex.type === 'skill') {
-        const nEl = document.querySelector(`[data-ex="${i}"][data-set="${s}"][data-field="note"]`);
-        setData.note = nEl?.value || '';
-      }
-      sets.push(setData);
+      const field = f => document.querySelector(`[data-ex="${i}"][data-set="${s}"][data-field="${f}"]`)?.value;
+      const weight = parseFloat(field('weight')) || 0;
+      const reps = parseInt(field('reps')) || 0;
+      const seconds = parseFloat(field('seconds')) || 0;
+      if (ex.type === 'weighted') sets.push({ weight, reps });
+      else if (ex.type === 'bodyweight') sets.push({ reps });
+      else if (ex.type === 'hold') sets.push({ seconds });
+      else if (ex.type === 'whold') sets.push({ weight, seconds });
+      else if (ex.type === 'skill') sets.push({ note: field('note') || '' });
+      else sets.push({ reps, seconds }); // warm-up: one of the two is set, depending on its target
     }
     entries.push({ name: ex.name, type: ex.type, sets });
   });
@@ -1576,8 +1713,10 @@ function saveSession() {
   const week = $('#main .week');
   if (week) week.outerHTML = weekHtml();
 
+  // A session logged on another day than today says so, the date is easy to miss in the week strip
+  const d = state.trainingDate;
   if (prs.length) showRecords(prs);
-  else toast('Session gespeichert');
+  else toast(d === today() ? 'Session gespeichert' : `Gespeichert für ${weekday(d)}, ${fmtDate(d)}`);
 }
 
 function showRecords(prs) {
@@ -1666,13 +1805,16 @@ function renderHistory(el) {
           <span class="card-chevron">&#9654;</span>
         </div>
         <div class="session-body">
-          ${session.entries.map(e => `
+          ${session.entries.filter(e => e.type !== 'warmup').map(e => `
             <div class="session-ex">
-              <div class="session-ex-name">${e.name} <span class="badge badge-${e.type}" style="font-size:0.65rem">${e.type}</span>${recs[e.name] ? ' <span class="pr-chip">Rekord</span>' : ''}</div>
+              <div class="session-ex-name">${e.name} <span class="badge badge-${e.type}" style="font-size:0.65rem">${TYPE_LABEL[e.type] || e.type}</span>${recs[e.name] ? ' <span class="pr-chip">Rekord</span>' : ''}</div>
               <div class="session-ex-sets">${formatSessionSets(e)}</div>
             </div>
           `).join('')}
-          <button class="btn-danger btn-sm" style="margin-top:10px" data-delete-session="${session.id}">Session löschen</button>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <button class="btn-ghost btn-sm" data-move-session="${session.id}">Datum ändern</button>
+            <button class="btn-danger btn-sm" data-delete-session="${session.id}">Session löschen</button>
+          </div>
         </div>
       </div>
     `;
@@ -1682,12 +1824,31 @@ function renderHistory(el) {
 
 function formatSessionSets(entry) {
   return entry.sets.map((s, i) => {
-    if (entry.type === 'weighted') return `S${i+1}: ${num(s.weight || 0)}kg x ${s.reps}`;
+    const kg = s.weight ? `${num(s.weight)}kg x ` : '';
+    if (entry.type === 'weighted') return `S${i+1}: ${kg}${s.reps}${kg ? '' : ' Reps'}`;
     if (entry.type === 'bodyweight') return `S${i+1}: ${s.reps} Reps`;
     if (entry.type === 'hold') return `S${i+1}: ${num(s.seconds || 0)}s`;
+    if (entry.type === 'whold') return `S${i+1}: ${kg}${num(s.seconds || 0)}s`;
     if (entry.type === 'skill') return `S${i+1}: ${s.note || '-'}`;
     return '';
   }).join(' &nbsp;|&nbsp; ');
+}
+
+function showMoveSessionModal(sessionId) {
+  const session = state.sessions.find(s => s.id === sessionId);
+  if (!session) return;
+  showModal(`
+    <h2>Datum ändern</h2>
+    <p class="modal-hint">${session.dayName}, bisher ${weekday(session.date)}, ${fmtDate(session.date)}</p>
+    <div class="modal-field">
+      <label for="modal-session-date">Neues Datum</label>
+      <input type="date" id="modal-session-date" value="${session.date}" max="${today()}">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Abbrechen</button>
+      <button class="btn-primary" id="modal-move-save" data-sid="${sessionId}">Speichern</button>
+    </div>
+  `);
 }
 
 // ===== PROGRESS VIEW =====
@@ -1695,12 +1856,14 @@ function renderProgress(el) {
   const totalSessions = state.sessions.length;
   const streak = weekStreak();
   const { records } = recordHistory();
-  const totalSets = state.sessions.reduce((a, s) => a + s.entries.reduce((b, e) => b + e.sets.length, 0), 0);
+  // Warm-ups are saved with the session but are no training volume and have no curve
+  const tracked = e => e.type !== 'warmup';
+  const totalSets = state.sessions.reduce((a, s) => a + s.entries.filter(tracked).reduce((b, e) => b + e.sets.length, 0), 0);
   const lastBw = state.bodyweight.length ? [...state.bodyweight].sort((a,b) => b.date.localeCompare(a.date))[0] : null;
 
   // Get all tracked exercises
   const allExNames = new Set();
-  state.sessions.forEach(s => s.entries.forEach(e => allExNames.add(e.name)));
+  state.sessions.forEach(s => s.entries.filter(tracked).forEach(e => allExNames.add(e.name)));
   const exList = [...allExNames].sort();
 
   let html = `
@@ -1785,6 +1948,10 @@ function getExerciseChartData(exName, mode) {
     } else if (entry.type === 'hold') {
       const secs = entry.sets.map(set => set.seconds || 0);
       value = mode === 'volume' ? secs.reduce((a,b)=>a+b,0) : (secs.reduce((a,b)=>a+b,0) / secs.length);
+    } else if (entry.type === 'whold') {
+      value = mode === 'volume'
+        ? entry.sets.reduce((a, set) => a + (set.seconds || 0), 0)
+        : Math.max(...entry.sets.map(set => set.weight || 0));
     }
     return { date: s.date, value: Math.round(value * 10) / 10 };
   });
@@ -1805,6 +1972,7 @@ function drawExerciseChart() {
     if (entry.type === 'weighted') unit = mode === 'volume' ? 'kg (Vol)' : 'kg';
     else if (entry.type === 'bodyweight') unit = 'Reps';
     else if (entry.type === 'hold') unit = mode === 'volume' ? 's (Total)' : 's (Avg)';
+    else if (entry.type === 'whold') unit = mode === 'volume' ? 's (Total)' : 'kg';
   }
 
   drawLineChart(canvas, data.map(d => ({ label: fmtDate(d.date), value: d.value })), unit, 'var(--accent)');
@@ -2050,7 +2218,7 @@ function renderManageExercises() {
   list.innerHTML = day.exercises.map((ex, i) => `
     <li class="manage-item">
       <span class="manage-item-name">${ex.name}</span>
-      <span class="manage-item-type">${ex.type}</span>
+      <span class="manage-item-type">${(ex.variants || [ex]).map(v => TYPE_LABEL[v.type] || v.type).join(' / ')}</span>
       <div class="manage-actions">
         ${i > 0 ? `<button class="btn-icon" data-move-ex="${i}" data-dir="up">&#8593;</button>` : ''}
         ${i < day.exercises.length - 1 ? `<button class="btn-icon" data-move-ex="${i}" data-dir="down">&#8595;</button>` : ''}
@@ -2106,41 +2274,76 @@ function showRenameDayModal(dayId) {
   $('#modal-day-name').focus();
 }
 
+// Fields shared by the add and edit dialogs. An exercise with variants shows the first one on top
+// and the second one under "Alternative"; leaving the alternative's name empty makes it a plain exercise.
+function exFormHtml(ex) {
+  const main = ex?.variants?.[0] || ex || {};
+  const alt = ex?.variants?.[1] || {};
+  const types = sel => Object.entries(TYPE_LABEL).map(([t, label]) => `<option value="${t}" ${t === sel ? 'selected' : ''}>${label}</option>`).join('');
+  return `
+    <div class="modal-field">
+      <label for="modal-ex-name">Name</label>
+      <input type="text" id="modal-ex-name" value="${main.name || ''}" placeholder="Übungsname">
+    </div>
+    <div class="modal-field">
+      <label for="modal-ex-type">Typ</label>
+      <select id="modal-ex-type">${types(main.type || 'weighted')}</select>
+    </div>
+    <div class="modal-field">
+      <label for="modal-ex-sets">Sätze</label>
+      <input type="number" id="modal-ex-sets" value="${ex?.sets || 3}" min="1" max="20">
+    </div>
+    <div class="modal-field">
+      <label for="modal-ex-target">Zielvorgabe</label>
+      <input type="text" id="modal-ex-target" value="${main.target || ''}" placeholder="z.B. 3x12">
+    </div>
+    <div class="modal-field">
+      <label for="modal-ex-rir">RIR</label>
+      <input type="text" id="modal-ex-rir" value="${ex?.rir || ''}" placeholder="z.B. 1-2">
+    </div>
+    <div class="modal-sub">Alternative (optional)</div>
+    <p class="modal-hint">Zweite Variante derselben Übung, z.B. Cable Crunches oder Weighted Plank. Im Training wählst du aus, welche du machst.</p>
+    <div class="modal-field">
+      <label for="modal-alt-name">Name</label>
+      <input type="text" id="modal-alt-name" value="${alt.name || ''}" placeholder="leer = keine Alternative">
+    </div>
+    <div class="modal-field">
+      <label for="modal-alt-type">Typ</label>
+      <select id="modal-alt-type">${types(alt.type || 'weighted')}</select>
+    </div>
+    <div class="modal-field">
+      <label for="modal-alt-target">Zielvorgabe</label>
+      <input type="text" id="modal-alt-target" value="${alt.target || ''}" placeholder="z.B. 3x max">
+    </div>
+  `;
+}
+
+// Reads the dialog back into exercise fields; an empty name keeps the one passed in
+function readExForm(keepName = '') {
+  const altName = $('#modal-alt-name').value.trim();
+  const main = {
+    name: $('#modal-ex-name').value.trim() || keepName,
+    type: $('#modal-ex-type').value,
+    target: $('#modal-ex-target').value.trim()
+  };
+  const out = { ...main, sets: parseInt($('#modal-ex-sets').value) || 3, rir: $('#modal-ex-rir').value.trim() };
+  if (main.name && altName) {
+    out.variants = [main, { name: altName, type: $('#modal-alt-type').value, target: $('#modal-alt-target').value.trim() }];
+    out.name = `${main.name} / ${altName}`;
+  }
+  return out;
+}
+
 function showAddExModal(dayId) {
   showModal(`
     <h2>Neue Übung</h2>
     <div class="modal-field">
-      <label>Name</label>
-      <input type="text" id="modal-ex-name" placeholder="Übungsname">
-    </div>
-    <div class="modal-field">
-      <label>Typ</label>
-      <select id="modal-ex-type">
-        <option value="weighted">Weighted</option>
-        <option value="bodyweight">Bodyweight</option>
-        <option value="hold">Hold</option>
-        <option value="skill">Skill</option>
-        <option value="warmup">Warm-Up</option>
-      </select>
-    </div>
-    <div class="modal-field">
-      <label>Sätze</label>
-      <input type="number" id="modal-ex-sets" value="3" min="1" max="20">
-    </div>
-    <div class="modal-field">
-      <label>Zielvorgabe</label>
-      <input type="text" id="modal-ex-target" placeholder="z.B. 3x12">
-    </div>
-    <div class="modal-field">
-      <label>RIR</label>
-      <input type="text" id="modal-ex-rir" placeholder="z.B. 1-2">
-    </div>
-    <div class="modal-field">
-      <label>Trainingstag</label>
+      <label for="modal-ex-day">Trainingstag</label>
       <select id="modal-ex-day">
         ${state.days.map(d => `<option value="${d.id}" ${d.id === dayId ? 'selected' : ''}>${d.name}</option>`).join('')}
       </select>
     </div>
+    ${exFormHtml()}
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeModal()">Abbrechen</button>
       <button class="btn-primary" id="modal-ex-save">Erstellen</button>
@@ -2159,28 +2362,7 @@ function showEditExModal(exId) {
 
   showModal(`
     <h2>Übung bearbeiten</h2>
-    <div class="modal-field">
-      <label>Name</label>
-      <input type="text" id="modal-ex-name" value="${ex.name}">
-    </div>
-    <div class="modal-field">
-      <label>Typ</label>
-      <select id="modal-ex-type">
-        ${['weighted','bodyweight','hold','skill','warmup'].map(t => `<option value="${t}" ${t === ex.type ? 'selected' : ''}>${t}</option>`).join('')}
-      </select>
-    </div>
-    <div class="modal-field">
-      <label>Sätze</label>
-      <input type="number" id="modal-ex-sets" value="${ex.sets}" min="1" max="20">
-    </div>
-    <div class="modal-field">
-      <label>Zielvorgabe</label>
-      <input type="text" id="modal-ex-target" value="${ex.target}">
-    </div>
-    <div class="modal-field">
-      <label>RIR</label>
-      <input type="text" id="modal-ex-rir" value="${ex.rir || ''}">
-    </div>
+    ${exFormHtml(ex)}
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeModal()">Abbrechen</button>
       <button class="btn-primary" id="modal-ex-update" data-ex="${exId}" data-day="${day.id}">Speichern</button>
@@ -2224,14 +2406,33 @@ document.addEventListener('click', e => {
     return;
   }
 
-  // Skill set check-off: an empty note becomes a tick, a lone tick is removed again
+  // Set check-off. Skill: an empty note becomes a tick, a lone tick is removed again (a written note stays).
+  // Warm-up: the empty field takes the target value, a filled one is cleared again.
   if (t.closest('.check-btn')) {
-    const note = t.closest('.set-row').querySelector('[data-field="note"]');
-    if (note) {
-      if (note.value.trim() === '') note.value = '✓';
-      else if (note.value.trim() === '✓') note.value = '';
-      note.dispatchEvent(new Event('input', { bubbles: true }));
+    const btn = t.closest('.check-btn');
+    const input = btn.closest('.set-row').querySelector('[data-field]');
+    if (input) {
+      const cur = input.value.trim();
+      if (btn.dataset.fill !== undefined) input.value = cur === '' ? btn.dataset.fill : '';
+      else if (cur === '') input.value = '✓';
+      else if (cur === '✓') input.value = '';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
     }
+    return;
+  }
+
+  // Variant of an exercise: redraw with the other inputs, keep the open cards and the scroll position
+  if (t.closest('.variant-btn')) {
+    const btn = t.closest('.variant-btn');
+    const ex = trainExs[+btn.dataset.variantEx];
+    if (!ex) return;
+    (drafts[draftKey()] ||= {})[`${ex.id}|variant`] = btn.dataset.variant;
+    saveDrafts();
+    const open = [...$$('#main .card.open')].map(c => c.dataset.exIdx);
+    const y = window.scrollY;
+    render();
+    open.forEach(i => $(`#main .card[data-ex-idx="${i}"]`)?.classList.add('open'));
+    window.scrollTo(0, y);
     return;
   }
 
@@ -2264,6 +2465,36 @@ document.addEventListener('click', e => {
       save();
       render();
     }
+    return;
+  }
+
+  // Move a session to another date
+  if (t.dataset.moveSession) {
+    showMoveSessionModal(t.dataset.moveSession);
+    return;
+  }
+  if (t.id === 'modal-move-save') {
+    const session = state.sessions.find(s => s.id === t.dataset.sid);
+    const date = $('#modal-session-date').value;
+    if (!session || !date) return;
+    if (date > today()) { toast('Das Datum liegt in der Zukunft'); return; }
+    if (date !== session.date) {
+      if (state.sessions.some(s => s !== session && s.date === date && s.dayId === session.dayId)) {
+        toast('An dem Tag gibt es diese Einheit schon');
+        return;
+      }
+      // Unsaved inputs belong to the old date and would reappear there as a phantom session
+      delete drafts[`${session.date}|${session.dayId}`];
+      saveDrafts();
+      const touched = [session.date, date].includes(state.trainingDate);
+      session.date = date;
+      save();
+      // The training view follows: the day it shows is the one logged on its date
+      if (touched) state.selectedDayId = dayForDate(state.trainingDate) || state.selectedDayId;
+    }
+    closeModal();
+    render();
+    toast(`Session liegt jetzt auf ${weekday(date)}, ${fmtDate(date)}`);
     return;
   }
 
@@ -2317,11 +2548,11 @@ document.addEventListener('click', e => {
     }
     const day = state.days.find(d => d.id === state.selectedDayId);
     const ex = day.exercises[idx];
-    // Find all exercises of same type from all days
+    // Find all exercises of same type from all days (a swap copies the name only, so no exercises with variants)
     const compatible = [];
     state.days.forEach(d => {
       d.exercises.forEach(otherEx => {
-        if (otherEx.type === ex.type && otherEx.name !== ex.name && !compatible.find(c => c.name === otherEx.name)) {
+        if (!otherEx.variants && otherEx.type === ex.type && otherEx.name !== ex.name && !compatible.find(c => c.name === otherEx.name)) {
           compatible.push(otherEx);
         }
       });
@@ -2477,11 +2708,9 @@ document.addEventListener('click', e => {
     const day = state.days.find(d => d.id === dayId);
     const ex = day?.exercises.find(e => e.id === exId);
     if (!ex) return;
-    ex.name = $('#modal-ex-name').value.trim() || ex.name;
-    ex.type = $('#modal-ex-type').value;
-    ex.sets = parseInt($('#modal-ex-sets').value) || ex.sets;
-    ex.target = $('#modal-ex-target').value;
-    ex.rir = $('#modal-ex-rir').value;
+    const form = readExForm(ex.variants?.[0].name || ex.name);
+    delete ex.variants;
+    Object.assign(ex, form);
     save();
     closeModal();
     render();
@@ -2497,19 +2726,12 @@ document.addEventListener('click', e => {
 
   // Modal: Save new exercise
   if (t.id === 'modal-ex-save') {
-    const name = $('#modal-ex-name').value.trim();
-    if (!name) return;
+    const form = readExForm();
+    if (!form.name) return;
     const dayId = $('#modal-ex-day').value;
     const day = state.days.find(d => d.id === dayId);
     if (!day) return;
-    day.exercises.push({
-      id: uid(),
-      name,
-      type: $('#modal-ex-type').value,
-      sets: parseInt($('#modal-ex-sets').value) || 3,
-      target: $('#modal-ex-target').value || '',
-      rir: $('#modal-ex-rir').value || ''
-    });
+    day.exercises.push({ id: uid(), ...form });
     save();
     closeModal();
     render();
@@ -2519,7 +2741,7 @@ document.addEventListener('click', e => {
 
   // Export
   if (t.id === 'export-btn' || t.closest('#export-btn')) {
-    const data = JSON.stringify({ days: state.days, sessions: state.sessions, bodyweight: state.bodyweight }, null, 2);
+    const data = JSON.stringify({ v: DATA_VERSION, days: state.days, sessions: state.sessions, bodyweight: state.bodyweight }, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -2549,6 +2771,7 @@ document.addEventListener('change', e => {
         const data = JSON.parse(reader.result);
         if (!data.days || !Array.isArray(data.days)) throw new Error('Invalid format');
         if (confirm(`Import: ${data.days.length} Tage, ${(data.sessions||[]).length} Sessions, ${(data.bodyweight||[]).length} Gewichtseinträge. Bestehende Daten werden überschrieben!`)) {
+          migrate(data);
           state.days = data.days;
           state.sessions = data.sessions || [];
           state.bodyweight = data.bodyweight || [];
@@ -2592,7 +2815,7 @@ document.addEventListener('change', e => {
 document.addEventListener('input', e => {
   const el = e.target;
   if (!el.dataset || !el.dataset.field || el.dataset.ex === undefined) return;
-  const ex = currentDay()?.exercises[+el.dataset.ex];
+  const ex = trainExs[+el.dataset.ex];
   if (!ex) return;
   (drafts[draftKey()] ||= {})[`${ex.name}|${el.dataset.set}|${el.dataset.field}`] = el.value;
   saveDrafts();
@@ -2657,10 +2880,18 @@ function buzz(pattern) {
 }
 
 function openTimer(exIdx, setIdx) {
-  const ex = currentDay()?.exercises[exIdx];
+  const ex = trainExs[exIdx];
   if (!ex || timer) return;
-  const isHold = ex.type === 'hold';
-  const best = isHold ? (trainBests[exIdx]?.a ?? null) : null;
+  const isHold = ex.type === 'hold' || ex.type === 'whold';
+  let best = null;
+  if (ex.type === 'hold') {
+    best = trainBests[exIdx]?.a ?? null;
+  } else if (ex.type === 'whold') {
+    // The best time is only a mark to chase when this set carries the same weight
+    const rec = trainBests[exIdx];
+    const kg = parseFloat(document.querySelector(`[data-ex="${exIdx}"][data-set="${setIdx}"][data-field="weight"]`)?.value) || 0;
+    if (rec && rec.a === kg) best = rec.b;
+  }
   const parsed = parseGoalSeconds(ex.target);
   timer = {
     exIdx, setIdx, isHold, best,
@@ -2822,7 +3053,8 @@ function stopTimer(commit) {
   const btn = document.querySelector(`[data-timer-ex="${exIdx}"][data-timer-set="${setIdx}"]`);
   const input = document.querySelector(`[data-ex="${exIdx}"][data-set="${setIdx}"][data-field="seconds"]`);
   if (btn) {
-    btn.textContent = fmtTimer(ms);
+    // The icon-only button next to a seconds field keeps its icon, the time is in the field
+    if (!btn.classList.contains('compact')) btn.textContent = fmtTimer(ms);
     btn.classList.add('timed');
   }
   if (input) {
@@ -2830,6 +3062,18 @@ function stopTimer(commit) {
     input.dispatchEvent(new Event('input', { bubbles: true }));
   }
 }
+
+// The app can stay open in the background over midnight. On return it moves on to the new day,
+// unless a timer runs or the day on screen has unsaved input (a workout in progress keeps its date).
+let lastToday = today();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  const now = today();
+  if (now === lastToday) return;
+  const idle = state.trainingDate === lastToday && !timer && !Object.keys(drafts[draftKey()] || {}).length;
+  lastToday = now;
+  if (idle) setTrainingDate(now);
+});
 
 // The lock is dropped when the app goes to the background; take it again on return
 document.addEventListener('visibilitychange', () => {
